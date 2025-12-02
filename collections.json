@@ -748,5 +748,155 @@
     "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_fa4c9703-a946-4b07-b4e8-2a0295cb7fc7",
     "timestamp": "2025-12-02 18:04:08.393243",
     "report_generated": false
+  },
+  {
+    "question": "SafeTokenTransfers.safeTransferFrom() checks recipient balance at line 64 and 66. If the recipient address is a smart contract wallet that implements token forwarding (automatically forwarding received tokens to another address via transferFrom in the same transaction), could the balance check at line 67 fail even for legitimate transfers because the recipient's balance didn't increase by the expected amount, causing DOS for valid deposit requests?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_886a98b9-7c72-4ab9-b18b-11413090040d",
+    "timestamp": "2025-12-02 18:05:17.243349",
+    "report_generated": false
+  },
+  {
+    "question": "In SafeTokenTransfers.safeTransfer() (line 51), if the asset token contract is a proxy with a malicious implementation that returns manipulated values from balanceOf() calls, could an attacker bypass the balance validation check at line 53 by making balanceOf(recipient) return (balanceBefore + amount) at line 52 even though the actual transfer didn't occur, allowing the vault to credit shares without receiving assets?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_71e21690-a16f-474d-ae1b-4b72764f66aa",
+    "timestamp": "2025-12-02 18:05:30.821434",
+    "report_generated": false
+  },
+  {
+    "question": "SafeTokenTransfers.safeTransferFrom() (line 67) performs strict equality check: balanceAfter != balanceBefore + amount. If the asset token has an edge case where dust amounts (1-2 wei) are automatically transferred to a fee address during large transfers, could legitimate large deposits from institutional users fail with TransferAmountMismatch even though the actual value loss is negligible, causing DOS for high-value deposit requests that exceed $.minimumDepositAmount?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_b8cb21d6-3869-4373-b37c-1cf4c36a74cc",
+    "timestamp": "2025-12-02 18:05:44.499634",
+    "report_generated": false
+  },
+  {
+    "question": "In SafeTokenTransfers.safeTransfer() line 53, the check 'balanceAfter != balanceBefore + amount' involves unchecked addition. If balanceBefore is close to type(uint256).max and amount is large, could the addition overflow (wrapping to a small value), causing the check to pass even though balanceAfter is actually less than expected, allowing the vault to send more assets than it has available and breaking the totalAssets() accounting invariant?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_e1bdef55-676b-42e5-a4f3-0284833e778c",
+    "timestamp": "2025-12-02 18:05:58.748971",
+    "report_generated": false
+  },
+  {
+    "question": "SafeTokenTransfers.safeTransferFrom() (line 67) checks balanceAfter != balanceBefore + amount. If the asset token uses a custom decimal representation where balances are stored in a different unit than what balanceOf() returns, and the conversion causes integer overflow during the addition operation, could this bypass the validation check and allow fee-on-transfer tokens to be incorrectly accepted, violating the documented incompatibility with such tokens?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_db52de0a-7964-48be-a633-50286c3ff936",
+    "timestamp": "2025-12-02 18:06:13.966653",
+    "report_generated": false
+  },
+  {
+    "question": "In SafeTokenTransfers.safeTransferFrom() (line 63), if sender == recipient, the balance check at line 67 expects balanceAfter == balanceBefore + amount. However, if the token contract implements internal logic that doesn't modify balances for self-transfers (balance stays same), would the check incorrectly revert with TransferAmountMismatch for legitimate same-address transfers, potentially breaking batch settlement netting operations where a user appears as both sender and recipient?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_614cae67-e492-469a-81a9-a36f6f43d632",
+    "timestamp": "2025-12-02 18:06:30.203487",
+    "report_generated": false
+  },
+  {
+    "question": "SafeTokenTransfers.safeTransfer() (line 49) checks recipient balance before and after. If recipient == address(this) (transferring to self), and the token implementation short-circuits self-transfers without changing balance, could this cause spurious TransferAmountMismatch reverts during claimCancelDepositRequest() (line 1707) or claimCancelRedeemRequest() (line 1881) if the vault is accidentally set as receiver, causing DOS for cancellation claims?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_6322a1f9-ab6e-4f77-bcfa-804166da901b",
+    "timestamp": "2025-12-02 18:06:50.266239",
+    "report_generated": false
+  },
+  {
+    "question": "In SafeTokenTransfers.safeTransferFrom() (line 63-67), if sender == address(this) == recipient (vault transferring to itself), the balance validation expects net increase of amount. But if the token implementation recognizes this as a no-op and doesn't emit Transfer event or modify balances, could this break the async deposit/redeem flow assumptions in ERC7575VaultUpgradeable where the vault expects exact balance changes for accounting purposes?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_c3c95026-bd5e-484c-81f7-7e707960321e",
+    "timestamp": "2025-12-02 18:07:09.394190",
+    "report_generated": false
+  },
+  {
+    "question": "SafeTokenTransfers.safeTransferFrom() (line 63) doesn't validate that amount > 0 before calling safeTransferFrom(). If amount == 0, some ERC20 implementations may not emit Transfer events or may behave unexpectedly. Could a malicious user call requestDeposit() with assets that round down to 0 after decimal conversion, causing SafeTokenTransfers to pass validation but the vault to credit 0 shares, creating a DOS vector where $.activeDepositRequesters grows unbounded with zero-value requests?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_f06665c1-d236-4c65-9d05-c0c9586d41ab",
+    "timestamp": "2025-12-02 18:07:31.816402",
+    "report_generated": false
+  },
+  {
+    "question": "In SafeTokenTransfers.safeTransfer() (line 49), if amount == 0, the balance check at line 53 will always pass (balanceAfter == balanceBefore). Could an attacker exploit this in the async redeem flow by requesting a redemption that converts to 0 assets after fulfillment (due to rounding), then call claimRedeem() to trigger SafeTokenTransfers.safeTransfer() with 0 amount, bypassing the ZeroAssets validation in the claim function and potentially manipulating $.totalClaimableRedeemAssets accounting?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_13053a3c-f5fc-4a05-ac5a-e8fe8fa0ab36",
+    "timestamp": "2025-12-02 18:07:54.824931",
+    "report_generated": false
+  },
+  {
+    "question": "SafeTokenTransfers.safeTransferFrom() (line 65) calls balanceOf() on the token contract after the transfer. If the asset token implements a malicious balanceOf() function that consumes excessive gas (e.g., by reading from unbounded storage), could an attacker deploy such a token, register it with the vault system (if possible), and cause all deposit requests to run out of gas during the balance validation check, effectively DOS-ing the entire deposit flow?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_43e4ab49-a3d4-463e-b041-e409ff40575b",
+    "timestamp": "2025-12-02 18:08:18.984147",
+    "report_generated": false
+  },
+  {
+    "question": "In SafeTokenTransfers.safeTransfer() (line 50, 52), two balanceOf() calls are made per transfer. If the asset token contract has a gas-intensive balanceOf() implementation (e.g., iterating through holders or computing balances on-chain), could this cause claims in ERC7575VaultUpgradeable.claimRedeem() (line 916) or claimCancelDepositRequest() (line 1707) to consistently fail due to block gas limit, trapping user funds in claimable state permanently?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_1414de97-f681-4aa0-bb31-63c058e80489",
+    "timestamp": "2025-12-02 18:08:44.923432",
+    "report_generated": false
+  },
+  {
+    "question": "SafeTokenTransfers.safeTransferFrom() (line 63) trusts the token contract's balanceOf() and safeTransferFrom() implementations. If the asset token is a proxy with an upgradeable implementation, could the token owner upgrade to a malicious implementation that manipulates balanceOf() return values to always return (balanceBefore + amount) at line 66, allowing the vault to credit shares without actually receiving assets, enabling the token owner to drain vault reserves?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_d093a4b4-f4ac-44d2-92bd-7fd3a45de3df",
+    "timestamp": "2025-12-02 18:09:11.800532",
+    "report_generated": false
+  },
+  {
+    "question": "In SafeTokenTransfers.safeTransfer() (line 51), if the asset token contract is a malicious implementation that allows the token owner to arbitrarily modify user balances via an admin function, could the token owner front-run a claimRedeem() transaction by artificially increasing the recipient's balance just before the post-transfer balance check, causing the check to pass even though the vault never sent tokens, resulting in double-spending where both the recipient and the vault believe they own the assets?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_07e573e2-494e-418e-a869-2a46f3bd9bf9",
+    "timestamp": "2025-12-02 18:09:38.165512",
+    "report_generated": false
+  },
+  {
+    "question": "SafeTokenTransfers.safeTransferFrom() (line 64-66) reads recipient balance twice. If the asset token implements a malicious balanceOf() that returns different values on subsequent calls (stateful randomness), could this cause non-deterministic behavior where the same transfer sometimes passes and sometimes reverts with TransferAmountMismatch, creating a DOS vector for deposits where users must retry multiple times with increasing gas costs?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_e8ebfbb6-c8d6-4165-93a4-a3b78ac20f06",
+    "timestamp": "2025-12-02 18:10:03.996516",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.requestDeposit() (line 361), SafeTokenTransfers.safeTransferFrom() is called BEFORE updating $.pendingDepositAssets (line 364). This follows Pull-Then-Credit pattern. However, if the token has a callback hook that allows the owner to call cancelDepositRequest() during the transfer, could the owner cancel the deposit request before the assets are credited to $.pendingDepositAssets, then re-request with the same assets, causing the vault to accept double deposits from the same assets?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_bbe427b6-9cab-4089-b3a5-ac9af77f4d5f",
+    "timestamp": "2025-12-02 18:10:31.260425",
+    "report_generated": false
+  },
+  {
+    "question": "SafeTokenTransfers.safeTransfer() is called in claimRedeem() after burning shares (line 912-916). If the asset token has a callback that allows reentrancy back into requestDeposit() during the transfer, could an attacker claim redeemed assets (reducing $.totalClaimableRedeemAssets), immediately re-deposit them (increasing $.totalPendingDepositAssets), and repeat this cycle to manipulate the reserved asset calculation (reservedAssets = pending + claimable) to exceed actual vault holdings?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_b7910d32-8f18-449d-ab05-a654e2be7739",
+    "timestamp": "2025-12-02 18:10:59.680738",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.fulfillDepositRequest() (line 558-590), the Investment Manager calls this to convert pending deposits to claimable shares. However, this function doesn't directly call SafeTokenTransfers. If an attacker front-runs the fulfillment transaction with a large deposit via requestDeposit() (which uses SafeTokenTransfers.safeTransferFrom at line 361), could the sudden balance increase cause the fulfillment's share calculation to use inflated totalAssets(), minting more shares than intended and diluting existing shareholders?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_ce4d7e20-ae26-45b1-8144-5561503da02a",
+    "timestamp": "2025-12-02 18:11:26.846775",
+    "report_generated": false
+  },
+  {
+    "question": "SafeTokenTransfers.safeTransfer() is used in claimCancelDepositRequest() (line 1707). If the asset token has a transfer callback that allows the owner to call requestDeposit() during the cancellation claim transfer, could the owner immediately re-deposit the cancelled assets, creating a situation where $.totalPendingDepositAssets + $.totalCancelDepositAssets counts the same assets twice, breaking the reserved asset calculation and allowing over-investment beyond safe limits?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_e34f542e-4ee6-4154-86f2-352d3d125465",
+    "timestamp": "2025-12-02 18:11:54.469713",
+    "report_generated": false
+  },
+  {
+    "question": "SafeTokenTransfers.safeTransferFrom() is used to pull assets in requestDeposit() (line 361). The vault then tracks these assets in $.pendingDepositAssets which contributes to reservedAssets calculation. If an attacker deposits a large amount triggering SafeTokenTransfers, then the Investment Manager calls investAssets() to move funds to the investment vault, could a race condition exist where the balance check in SafeTokenTransfers validates against the vault's balance BEFORE investAssets() executes, allowing the same assets to be double-counted in both $.pendingDepositAssets and $.investedAssets?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_6e0232d9-0d43-4264-b3ac-1428db6450fd",
+    "timestamp": "2025-12-02 18:12:23.246468",
+    "report_generated": false
+  },
+  {
+    "question": "In investAssets() (line 1530), the vault transfers assets to the investment vault using SafeERC20.safeTransfer (not SafeTokenTransfers). However, when users deposit via requestDeposit(), SafeTokenTransfers.safeTransferFrom() is used. If the investment vault's address is malicious and implements a receive hook that manipulates balances, could there be an inconsistency where deposits are validated with strict balance checks but investments are not, allowing the investment vault to extract more value than accounted for?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_b8b3c4e6-e025-4220-ad8b-617e14313ad7",
+    "timestamp": "2025-12-02 18:12:51.662859",
+    "report_generated": false
+  },
+  {
+    "question": "SafeTokenTransfers ensures exact transfer amounts, but the investment vault integration (lines 1530-1547) uses a different transfer mechanism. If the investment vault implements a yield-bearing token that automatically increases balances over time (like aTokens), could the reserved asset calculation break because SafeTokenTransfers validated exact amounts during deposit, but when withdrawFromInvestment() is called, the vault receives more assets than expected, causing $.investedAssets underflow or $.totalAssets overflow?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_3701c08d-bb39-4fd1-8ff0-5a1e5cbb3d57",
+    "timestamp": "2025-12-02 18:13:19.882086",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575ShareToken.batchTransfers() (lines 680-750) performs batch settlement netting but doesn't use SafeTokenTransfers for share token movements. However, when users claim their deposits after fulfillment, SafeTokenTransfers.safeTransfer() is used for the underlying asset. If a user participates in a batch settlement that nets to receiving shares, then immediately claims a pending redeem using those shares, could the strict balance validation in SafeTokenTransfers cause unexpected reverts if the share token's balance hasn't properly settled due to batch netting timing?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_03aa3860-0c79-4fe1-bb7c-1628d8105c24",
+    "timestamp": "2025-12-02 18:13:48.573052",
+    "report_generated": false
+  },
+  {
+    "question": "SafeTokenTransfers.safeTransferFrom() (line 63) validates exact amounts. If a user's deposit request is fulfilled via fulfillDepositRequest(), granting claimable shares, but the user is simultaneously participating in a batch settlement operation that adjusts their share balance via _rBalances modifications, could there be a race condition where the claim operation using SafeTokenTransfers fails because the balance validation expects a different starting balance than what batch netting produced?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_12a77ef4-198c-46f4-b837-ca2a77ee0502",
+    "timestamp": "2025-12-02 18:14:16.189449",
+    "report_generated": false
+  },
+  {
+    "question": "SafeTokenTransfers.safeTransferFrom() (line 67) performs strict equality check for balance changes. ERC7575VaultUpgradeable uses decimal offset calculations (10^(18 - assetDecimals)) to normalize shares to 18 decimals. If an asset has 6 decimals (like USDC), and a user deposits an amount that causes precision loss during share calculation, could the subsequent transfer validation fail because the actual asset amount transferred (before conversion) doesn't match the reconverted amount expected by the vault's accounting?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_97212bd7-f05e-4061-8e10-0a6814fe61b0",
+    "timestamp": "2025-12-02 18:14:42.341549",
+    "report_generated": false
   }
 ]
