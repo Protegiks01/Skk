@@ -298,5 +298,155 @@
     "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_98d7ad93-c012-4c58-a339-6a7454f43038",
     "timestamp": "2025-12-02 17:31:17.835529",
     "report_generated": false
+  },
+  {
+    "question": "SafeTokenTransfers.safeTransferToken() uses a low-level call to token.transfer(to, amount) and checks the return data (line ~15). If the token contract returns true in returndata but actually reverts inside a try-catch block (e.g., a malicious token that catches its own revert and returns success), does safeTransferToken() incorrectly assume the transfer succeeded, allowing the vault to update balances without actually receiving tokens?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_baf452d8-1cec-4e6c-9b33-39e328e70582",
+    "timestamp": "2025-12-02 17:32:36.295856",
+    "report_generated": false
+  },
+  {
+    "question": "In SafeTokenTransfers.safeTransferToken(), if the token contract does not return any data (returndata.length == 0) and the call succeeds, the function treats it as success (line ~18). If the token is a malicious contract that implements transfer() as a no-op (simply returns without reverting or transferring), does the vault accept the 'transfer' as successful and credit the user with shares, despite no actual tokens being received?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_8098a2f4-0116-4dd2-9dbe-9105c33aad4f",
+    "timestamp": "2025-12-02 17:32:49.639936",
+    "report_generated": false
+  },
+  {
+    "question": "SafeTokenTransfers.safeTransferFrom() calls token.transferFrom(from, to, amount) via low-level call.  If the 'from' address is a malicious contract that implements ERC20 approval but does not actually hold the asset tokens, can the transferFrom call succeed (return true) but transfer 0 tokens (or revert silently), causing the vault to mint shares for deposits that never materialize?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_84607b19-ae1c-441f-a0f7-096ac8a3a5bf",
+    "timestamp": "2025-12-02 17:33:04.356370",
+    "report_generated": false
+  },
+  {
+    "question": "When ERC7575VaultUpgradeable.fulfillDeposit() mints shares to the vault (as an intermediate holder) before transferring to the controller, the ShareToken's mint() function is called. If WERC7575ShareToken.mint() checks msg.sender == assetToVault[asset] but ERC7575VaultUpgradeable is a UUPS proxy, does the check compare against the proxy address or implementation address?  If implementation, can an attacker deploy a malicious proxy with the same implementation and mint unauthorized shares? ",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_c3126cd7-9642-455e-b5aa-1631d521d535",
+    "timestamp": "2025-12-02 17:33:18.806425",
+    "report_generated": false
+  },
+  {
+    "question": "ERC7575VaultUpgradeable.investAssets() deposits assets into an external investment vault and expects investment shares to be minted to the ShareToken contract (investmentShareToken address). If the investment vault mints shares to the vault proxy instead of the ShareToken, does this break the accounting where the vault's investedAssets() calculation relies on ShareToken holding the investment shares, causing investedAssets() to return 0 and allowing over-investment?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_98abfc05-8358-40e2-8eb2-591e8bd0571e",
+    "timestamp": "2025-12-02 17:33:33.830310",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575ShareToken.batchTransfers() is called by the Validator to settle carrier obligations.  If a batch includes a transfer from a vault address (e.g., as part of revenue distribution), does the batch transfer reduce the vault's share balance, and can this cause ERC7575VaultUpgradeable.totalAssets() to decrease unexpectedly, breaking the reserved asset calculation and allowing the Investment Manager to over-invest reserved funds?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_39ffaccb-cf61-430b-8cd5-b0c244d76a03",
+    "timestamp": "2025-12-02 17:33:50.545787",
+    "report_generated": false
+  },
+  {
+    "question": "In WERC7575ShareToken.batchTransfers(), if all transfers in the batch are self-transfers (debtor == creditor), the function skips all entries and never updates any balances (line ~690). Does the function still emit Transfer events for these skipped transfers, and if so, can off-chain systems misinterpret the events as actual transfers, causing accounting discrepancies in external integrations?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_4a3e7990-8dd3-4d1d-914a-5ceb2dd7f7df",
+    "timestamp": "2025-12-02 17:34:08.046689",
+    "report_generated": false
+  },
+  {
+    "question": "ERC7575VaultUpgradeable.requestDeposit() accepts assets from the user and increments totalPendingDeposit (line ~320). If the user immediately calls cancelDepositRequest() in the same block, the pending request is decremented and assets returned (line ~485). If the vault has multiple users with pending requests and the cancelation causes totalPendingDeposit to underflow (if storage was corrupted), can this permanently DoS all other users' fulfillDeposit() calls since the decrement would revert?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_66ec55cd-2c93-4099-adac-6e2df3ee2a88",
+    "timestamp": "2025-12-02 17:34:28.452880",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575ShareToken.permit() allows granting allowances via signature. If a user signs a permit for type(uint256).max allowance with deadline = type(uint256).max (infinite), and later the user's address is de-KYC'd (isKycVerified = false), can a holder of the permit signature still use it to transfer the user's shares to a KYC-verified recipient, bypassing the user's inability to directly transfer due to KYC revocation?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_2e76aa52-db7f-4e7e-93fd-1d803b0c42b9",
+    "timestamp": "2025-12-02 17:34:50.672769",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable, if totalPendingDeposit and totalClaimableDeposit both approach type(uint256).max (e.g., vault has been operating for years with massive volume), can the addition totalPendingDeposit + totalClaimableDeposit in _calculateReservedAssets() overflow, wrapping to a small number and causing the vault to massively under-reserve, allowing investAssets() to invest nearly all assets and leaving insufficient funds for pending claims?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_3c83fa40-c939-45bb-8efd-36b35d05671b",
+    "timestamp": "2025-12-02 17:35:14.147073",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575Vault.convertToShares(0) returns 0 * _offset = 0.  If a user calls deposit(0, receiver), does the function attempt to mint 0 shares, and does the ShareToken's mint(receiver, 0) emit a Transfer event with amount=0? If so, can this be abused to spam Transfer events or bypass KYC checks (since _update() might not validate 'to' for zero-value transfers)?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_def9edb8-c454-4d4d-a905-47d9ccfab20d",
+    "timestamp": "2025-12-02 17:35:37.744915",
+    "report_generated": false
+  },
+  {
+    "question": "ERC7575VaultUpgradeable.fulfillDeposit() calculates shares = convertToShares(assets) and increments totalClaimableDeposit by shares (line ~355). If assets = 1 wei and offset = 1e12 (USDC), shares = 1e12.  If the user's pendingDepositRequest was 1 wei but they are credited with 1e12 shares (due to decimal normalization), can the user claim 1e12 shares and redeem them for 1 USDC (1e6 wei), profiting 1e6x from the conversion rounding? ",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_cc23e6d8-1bd6-4683-b873-283c542a06f6",
+    "timestamp": "2025-12-02 17:36:03.311793",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575ShareToken.batchTransfers() checks that arrays have the same length (debtors.length == creditors. length == amounts.length).  If an attacker submits a batch where debtors.length = 100 but creditors.length = 99 (due to off-chain bug), the function reverts with ArrayLengthMismatch.  However, if the validator's off-chain system has a bug that silently pads creditors with address(0), does the batch execute with address(0) as creditor, causing tokens to be burned (transferred to zero address) and violating the zero-sum invariant?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_da81d39b-a07b-4ad8-82ad-233a426e5766",
+    "timestamp": "2025-12-02 17:36:29.919952",
+    "report_generated": false
+  },
+  {
+    "question": "ERC7575VaultUpgradeable.fulfillDeposit() has the nonReentrant modifier, but the function calls _shareToken.mint() (external call) before updating controllerToRequest[controller]. claimableDepositRequest (line ~355). If ShareToken's mint() is malicious and calls back into the vault (e.g., via a mint hook), can it re-enter fulfillDeposit() and double-increment claimableDepositRequest before the first call completes, allowing the controller to claim shares twice?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_822f2a99-1ca2-49d3-9886-3078ab7ab7c1",
+    "timestamp": "2025-12-02 17:36:56.778358",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575Vault.deposit() calls asset.transferFrom(msg.sender, address(this), assets) and then _shareToken.mint(msg.sender, shares). If the asset token has a malicious transferFrom that re-enters deposit() before returning, does the reentrancy guard (if present) prevent the re-entry, or can the attacker deposit once but mint shares multiple times? ",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_2b0d3681-7505-4959-aa8a-2031ec6d0483",
+    "timestamp": "2025-12-02 17:37:23.460573",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.investAssets(), the function calls investmentVault.deposit(assets, investmentShareToken) (external call) and then updates investedAssets storage. If the investment vault re-enters and calls withdrawFromInvestment() during the same transaction, can the nested call decrement investedAssets before the outer call increments it, causing accounting corruption?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_2bda0d87-31a8-4109-a3ff-0e6d7bcbb874",
+    "timestamp": "2025-12-02 17:37:50.405817",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575ShareToken.batchTransfers() has onlyValidator modifier, restricting calls to the validator address (line ~630). If the validator address is set to address(0) during initialization (or Owner accidentally calls setValidator(address(0))), does the modifier allow ANY caller (since msg.sender == address(0) is false, but no valid validator exists), effectively DoS'ing all batch transfers?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_8b6bac8f-ac26-4710-9c4f-83068aa962b9",
+    "timestamp": "2025-12-02 17:38:17.523784",
+    "report_generated": false
+  },
+  {
+    "question": "ERC7575VaultUpgradeable.fulfillDeposit() has onlyInvestmentManager modifier.  If the Investment Manager role is transferred to a malicious actor (but Investment Manager is TRUSTED per spec), they could fulfill requests with incorrect share amounts.  However, the realistic attack is: if setInvestmentManager() does not validate the new address is a contract or EOA with specific capabilities, can the Owner accidentally set investmentManager to a contract that cannot call fulfill functions, permanently locking all async requests?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_1ec74723-1cb4-4d04-bead-56cd23f23abf",
+    "timestamp": "2025-12-02 17:38:46.318412",
+    "report_generated": false
+  },
+  {
+    "question": "In WERC7575ShareToken.registerVault(), the function has onlyOwner modifier. If the Owner is a multisig and one signer is compromised, can the compromised signer call registerVault() with a malicious vault address before other signers notice, allowing the malicious vault to mint unlimited shares via mint() calls until the registration is revoked?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_b00789e4-899f-4cde-9929-d12e306e43d2",
+    "timestamp": "2025-12-02 17:39:16.450006",
+    "report_generated": false
+  },
+  {
+    "question": "ERC7575VaultUpgradeable.convertToShares() for a 6-decimal asset (USDC) converts 1 USDC (1e6) to 1e18 shares. If totalSupply is 1e18 shares and totalAssets is 1 USDC (1e6), the share price is 1:1.  But if totalAssets increases by 1 wei to 1e6 + 1, the new share price is (1e6 + 1) / 1e18 assets per share.  For the next deposit of 1 USDC (1e6), shares = 1e6 * 1e18 / (1e6 + 1) ≈ 1e18 - epsilon. Can an attacker exploit this rounding to gradually extract value by depositing and withdrawing repeatedly?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_170f2d33-7de2-4398-9b3d-e3ea6a4348c6",
+    "timestamp": "2025-12-02 17:39:46.140785",
+    "report_generated": false
+  },
+  {
+    "question": "In WERC7575Vault. convertToAssets(1), if offset = 1e12 (USDC), the function returns 1 / 1e12 = 0 due to integer division. If a user holds 1e11 shares (less than 1 USDC equivalent), convertToAssets(1e11) = 1e11 / 1e12 = 0, meaning they cannot redeem any assets. Can the user's shares become permanently unredeemable dust, violating the withdrawal availability invariant?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_b0edfc78-fc42-4c66-a91d-cbfd5f6bf0fa",
+    "timestamp": "2025-12-02 17:40:15.883811",
+    "report_generated": false
+  },
+  {
+    "question": "ERC7575VaultUpgradeable uses _convertToAssets() in reserved asset calculation.  If the vault holds both DAI (18 decimals, offset=1) and USDC (6 decimals, offset=1e12), and _calculateReservedAssets() is called on a USDC vault but accidentally uses DAI's offset, the conversion returns assets with wrong magnitude (1e12x error). If the vault operates multi-asset (though spec says one vault per asset), can this cross-contamination occur?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_7c9a1017-423d-4467-8630-e0d3292fce40",
+    "timestamp": "2025-12-02 17:40:41.753398",
+    "report_generated": false
+  },
+  {
+    "question": "ShareTokenUpgradeable's ShareTokenStorage struct uses EnumerableMap.AddressToAddressMap for assetToVault (line ~95). If the OpenZeppelin EnumerableMap library is upgraded in a dependency and changes the internal layout (e.g., adding a new field), and the ShareToken contract is redeployed without updating the storage struct, does the layout mismatch corrupt all asset-vault mappings, preventing vaults from being looked up and breaking all mint/burn operations?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a776da77-eb24-4349-b605-fa9cb3bd2d19",
+    "timestamp": "2025-12-02 17:41:06.338804",
+    "report_generated": false
+  },
+  {
+    "question": "ERC7575VaultUpgradeable's VaultStorage struct includes bool isActive (line ~120). In Solidity, bool is stored as uint8 in storage.  If a future upgrade mistakenly changes isActive to uint8 or adds a new uint8 field adjacent to it, does the storage slot packing/unpacking logic shift, causing isActive reads to return incorrect values and potentially DoS'ing deposits when isActive is read as false despite being set to true?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_3cdf0af8-25d4-4f7e-a0d4-d4ec77922b24",
+    "timestamp": "2025-12-02 17:41:32.614838",
+    "report_generated": false
+  },
+  {
+    "question": "In WERC7575ShareToken, if the contract is deployed with a specific storage layout and later a library function (e.g., in SafeERC20 or SafeTokenTransfers) is updated to use delegatecall, can the delegatecall context operate on the caller's storage, accidentally overwriting _balances or _rBalances mappings and corrupting user balances?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_42f9d279-2750-4b69-bd2a-f1f9001e23ca",
+    "timestamp": "2025-12-02 17:41:59.349063",
+    "report_generated": false
   }
 ]
