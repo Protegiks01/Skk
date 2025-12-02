@@ -1,3 +1,152 @@
 [
-
+  {
+    "question": "In ERC7575VaultUpgradeable.requestDeposit() (lines 341-371), SafeToken",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_bd1a1284-453a-4d7a-8380-c4c08554da61",
+    "timestamp": "2025-12-02 17:09:56.592454",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.setOperator() (lines 264-271), the function calls ShareToken.setOperatorFor(msg.sender, operator, approved). If the ShareToken's operator system is compromised or has a bug allowing unauthorized operator approvals, can an attacker gain operator permissions for other users through this vault function?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_383a3bf7-717e-48ca-99fb-dec3edb55ab4",
+    "timestamp": "2025-12-02 17:10:10.045764",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.deposit() (lines 557-589), shares are transferred using IERC20Metadata($.shareToken).transfer(receiver, shares). If the ShareToken has additional restrictions (like KYC checks) that cause the transfer to fail, does this revert the entire deposit() claim, or can it cause shares to be deducted from claimable without being transferred?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_252435ba-14da-40dd-bd51-1f54127980f7",
+    "timestamp": "2025-12-02 17:10:23.836211",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.requestRedeem() (lines 715-751), ShareToken.vaultTransferFrom() is used instead of standard transferFrom(). If vaultTransferFrom() has different authorization semantics or access controls, can this enable unauthorized redemption requests or bypass necessary checks?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a4f7fe2c-ba4b-4975-a909-5a0c809054ae",
+    "timestamp": "2025-12-02 17:10:39.271807",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.fulfillDeposit() (lines 425-445), ShareToken.mint() is called to mint shares to the vault. If the ShareToken's mint() function has a bug that mints fewer shares than requested or mints to a different address, can this cause a permanent divergence between claimableDepositShares and actual vault share balance?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_8dcfebb3-b7cf-4960-82fc-841804c1b6ce",
+    "timestamp": "2025-12-02 17:10:55.059884",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.initialize() (lines 150-190), the vault validates that the share token has 18 decimals. However, if the ShareToken is later upgraded to a version with different decimals, can this break all conversion calculations that assume 18 decimals, causing massive over/under-issuance of shares?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_4055de9a-23ee-417a-833b-2ec4641a2f22",
+    "timestamp": "2025-12-02 17:11:12.220031",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable, all functions use REQUEST_ID = 0 as a constant. If a malicious integrator calls pendingDepositRequest(999, controller) expecting it to return 0 for non-existent request 999, will it instead return the pending amount for request 0, causing accounting confusion in the integrator's system?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_ed407edf-1243-4507-ab6a-b99a7508225d",
+    "timestamp": "2025-12-02 17:11:30.160651",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.pendingDepositRequest() (lines 385-388), the requestId parameter is accepted but completely ignored—only the controller address is used. Can this violate the ERC7540 spec if integrations expect requestId to be meaningful, causing off-chain systems to malfunction?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_c2770e96-f7fb-4d1c-8f3c-247a2221fd93",
+    "timestamp": "2025-12-02 17:11:50.406610",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.claimCancelDepositRequest() (lines 1691-1711), if a future upgrade introduces support for multiple concurrent requestIds per controller, can the current single-requestId architecture cause conflicts where old pending cancelations are overwritten by new ones, losing user funds?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_bee04e31-b5ca-4f8a-ae9d-f7b0fa0326f5",
+    "timestamp": "2025-12-02 17:12:12.710607",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.cancelDepositRequest() (lines 1574-1595), the function checks if requestId != REQUEST_ID (which is 0) and reverts with InvalidRequestId. However, since REQUEST_ID is hardcoded to 0, is this check even necessary? Can an attacker find a way to exploit the assumption that requestId is always 0 to bypass other validations?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_01cab43f-7e1a-4f92-b2a3-983f073d516d",
+    "timestamp": "2025-12-02 17:12:35.728151",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.fulfillDeposits() (lines 453-484), there's no limit on the number of controllers in the batch. Can the investment manager pass an array of 10,000 controllers, causing the function to run out of gas and revert, while still having successfully processed partial fulfillments in the loop before the revert?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_87c90c36-2afc-41a1-af79-fdaa5d5f0590",
+    "timestamp": "2025-12-02 17:12:59.690589",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.initialize() (lines 150-190), scalingFactor is cast to uint64. While checked to not exceed uint64.max, if assetDecimals is very low (e.g., 2), scalingFactor would be 10^16 which fits. However, in _convertToShares(), normalizedAssets = assets * scalingFactor. Can this multiplication overflow for large asset amounts, causing conversions to revert?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_26049f6f-79dd-4290-aeae-beede6d118de",
+    "timestamp": "2025-12-02 17:13:25.325664",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.requestRedeem() (lines 715-751), there is no maximum redeem amount check. If a user requests to redeem type(uint256).max shares (assuming they have them), can this cause totalClaimableRedeemShares to overflow when fulfillRedeem() is called, bricking the entire redemption system?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_76eab93e-8068-45be-bc6a-11714f9ae59c",
+    "timestamp": "2025-12-02 17:13:53.205455",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.requestDeposit() (lines 341-371), there is no maximum deposit amount check. Can a whale deposit an amount so large that it overflows totalPendingDepositAssets (uint256 max), causing the deposit to succeed but totalAssets() to miscalculate reserved amounts, enabling over-investment?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_0e60299e-971f-4a2f-a07b-56ffcaeecbbf",
+    "timestamp": "2025-12-02 17:14:23.452789",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.getControllerStatusBatch() (lines 2002-2018), the function enforces a maximum batch size of 1000 (MAX_BATCH_SIZE). If an attacker creates 1001 pending deposits across different controllers, can they prevent the investment manager from efficiently querying all pending deposits in a single call, forcing them to use pagination which increases operational complexity?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_aea1d1b3-ae02-4b37-985b-81d9a8c00780",
+    "timestamp": "2025-12-02 17:14:54.948352",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.deposit() (lines 557-589), if the share transfer at line 586 fails by returning false instead of reverting, does the state update at lines 574-581 remain in effect? Can this cause claimableDepositShares[controller] to be decremented without shares being transferred, enabling the vault to steal shares?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_4be4c25b-60a5-47a9-b1b1-4a7af3006e3d",
+    "timestamp": "2025-12-02 17:15:28.566797",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.cancelDepositRequest() (lines 1574-1595), totalPendingDepositAssets is decremented and totalCancelDepositAssets is incremented by the same amount. If these updates are not atomic and a state change occurs in between (impossible without reentrancy), can this cause a temporary state where neither pending nor cancel totals account for the assets?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_dd5848d6-1291-4d3e-9ddb-25524ad498ab",
+    "timestamp": "2025-12-02 17:16:00.670607",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.fulfillRedeem() (lines 822-841), both claimableRedeemAssets and claimableRedeemShares are incremented by different amounts (assets and shares). If the conversion rate changes between multiple fulfillRedeem() calls for the same controller, can the ratio of total claimableRedeemAssets to claimableRedeemShares diverge from the expected ratio, causing redeem/withdraw claims to fail?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_148fa996-82d1-4dce-8a98-e998f699f780",
+    "timestamp": "2025-12-02 17:16:33.610119",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.requestRedeem() (lines 715-751), pendingRedeemShares[controller] is incremented and shares are transferred to the vault. If the share transfer succeeds but the state update reverts (impossible with current code structure), or if reentrancy causes a state inconsistency, can shares be transferred without pending state being updated, causing lost shares?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_7c8ce234-a436-44dc-bfc4-677ae7622f16",
+    "timestamp": "2025-12-02 17:17:10.119902",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.fulfillDeposit() (lines 425-445), both claimableDepositShares and claimableDepositAssets are incremented. If a subsequent bug causes these two values to get out of sync for a controller (e.g., one is incremented twice), can this enable the user to claim more shares or assets than entitled, draining the vault?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_ede2da65-2c67-4649-a94a-5b54d9f636b5",
+    "timestamp": "2025-12-02 17:17:44.158065",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.redeem() (lines 885-918), assets are calculated as shares.mulDiv(availableAssets, availableShares, Floor). If availableShares > availableAssets (possible after investment losses), the ratio < 1 and Floor rounding significantly benefits the vault. Can users end up receiving far fewer assets than their shares are worth, especially for small redemptions?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_d5c4ceb7-d1f3-4ca3-8473-11528af7a3e6",
+    "timestamp": "2025-12-02 17:18:16.099077",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable._convertToShares() (lines 1188-1196), the normalized assets are converted by ShareToken.convertNormalizedAssetsToShares() which uses the global circulating supply and assets. If the ShareToken's conversion has a different rounding mode than expected, can this cause a divergence in expected vs actual shares minted, breaking the stored claimableDepositAssets ratio?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_d7b8af1d-cd98-423d-9593-75c2ee164af8",
+    "timestamp": "2025-12-02 17:18:47.013669",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.fulfillDeposit() (lines 425-445), shares are calculated with Floor rounding. Over many small fulfillments, can the accumulated rounding error cause the sum of claimableDepositShares across all controllers to be significantly less than the shares that would have been calculated for the sum of all assets, causing a loss to users?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_eb1f3650-117b-43db-b63f-b3f1bf5768fe",
+    "timestamp": "2025-12-02 17:19:19.297747",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.withdraw() (lines 927-962), shares are calculated with Floor rounding, but assets are the user's requested amount. If the user requests exactly their claimableRedeemAssets, can rounding cause calculated shares to be 1 wei less, leaving dust shares that can never be redeemed because subsequent withdraw() calls with small assets would round to 0 shares?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_fe56672d-c7d2-4b8e-9790-87ad6998d717",
+    "timestamp": "2025-12-02 17:19:47.651052",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.deposit() (lines 557-589), shares are calculated using Math.Rounding.Floor which favors the vault. If a user's claimable assets are very small (e.g., 1 wei) and the share ratio is unfavorable, can the Floor rounding cause shares to round down to 0, triggering ZeroSharesCalculated revert and permanently locking those assets in claimable state?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_210ac76c-b77b-4dd5-9fdc-0ecfee01e409",
+    "timestamp": "2025-12-02 17:20:16.319100",
+    "report_generated": false
+  }
 ]
