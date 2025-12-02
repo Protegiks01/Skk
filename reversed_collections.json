@@ -1048,5 +1048,155 @@
     "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_0357866d-002b-48c7-8638-153ff70436d3",
     "timestamp": "2025-12-02 18:28:09.092989",
     "report_generated": false
+  },
+  {
+    "question": "The vault() function (lines 143-146) uses assetToVault.tryGet(asset) and returns (bool, address). If the asset is not registered, it returns (false, address(0)). However, if a caller doesn't check the boolean return value and directly uses the returned address(0) as a vault, could they accidentally interact with the zero address, causing reverts or, worse, if a precompile exists at address(0) on certain L2s, unexpected behavior?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_27de7673-01e6-49e6-be47-3283fef95c87",
+    "timestamp": "2025-12-02 18:29:24.160361",
+    "report_generated": false
+  },
+  {
+    "question": "In unregisterVault(), the function checks IERC20(asset).balanceOf(vaultAddress) != 0 (lines 318-320) as a final safety check. If tokens are accidentally sent directly to the vault address outside of normal vault operations (e.g., via a simple transfer()), could this permanently block vault unregistration even when all user funds are properly accounted for and claimed, requiring manual intervention to sweep the excess tokens first?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_e440da5c-910e-4c72-92af-a9a1e24e735a",
+    "timestamp": "2025-12-02 18:29:39.208014",
+    "report_generated": false
+  },
+  {
+    "question": "The unregisterVault() function (lines 282-327) checks metrics.totalCancelDepositAssets != 0 (line 301-302) to prevent unregistration with pending cancelations. However, if the vault's getVaultMetrics() function reverts or returns incorrect data due to a bug, the try-catch block (line 310-313) reverts with CannotUnregisterActiveVault. Could an attacker exploit a malicious vault that always reverts in getVaultMetrics() to make their vault permanently unremovable, locking the asset slot forever?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_739a846d-fa78-45b8-a709-22dffdc440c7",
+    "timestamp": "2025-12-02 18:29:53.990654",
+    "report_generated": false
+  },
+  {
+    "question": "In _configureVaultInvestmentSettings() (lines 540-551), the function approves type(uint256).max allowance to the vault on the investment ShareToken (line 549). If a registered vault is later found to be malicious or compromised, could it drain all investment ShareToken balance from this ShareToken contract since the unlimited approval remains active until manually revoked?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_d2354eea-b8ce-4ea4-aed8-f26c45d64a2e",
+    "timestamp": "2025-12-02 18:30:09.842232",
+    "report_generated": false
+  },
+  {
+    "question": "The registerVault() function automatically configures investment settings (lines 220-232) if investmentShareToken is already set. If the investment vault lookup (line 542) returns address(0) for a specific asset but other assets have valid investment vaults, could this create an asymmetric state where some vaults can invest while others cannot, leading to unfair yield distribution or unexpected behavior when users deposit into different asset vaults?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_0321ba3a-b9f4-44af-ad90-edd174bbc1f0",
+    "timestamp": "2025-12-02 18:30:26.827658",
+    "report_generated": false
+  },
+  {
+    "question": "In registerVault() (line 215), the function calls $.assetToVault.set(asset, vaultAddress) and checks the return value to detect duplicate registrations. However, if an attacker registers vault A for asset X, then the owner unregisters it, could the attacker immediately re-register vault B for the same asset X before legitimate operations complete, potentially causing accounting inconsistencies if users have pending requests in the old vault?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_6b3d5b95-931a-4df3-a3b8-340bd4a72966",
+    "timestamp": "2025-12-02 18:30:45.137122",
+    "report_generated": false
+  },
+  {
+    "question": "The registerVault() function checks $.assetToVault.length() >= MAX_VAULTS_PER_SHARE_TOKEN (lines 210-212) before registration. If an attacker front-runs legitimate vault registrations by repeatedly calling registerVault() with dummy vaults until the limit is reached, could they permanently DoS the protocol by preventing registration of real vaults, effectively bricking the share token?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_113f89c5-4e13-490b-8a84-bdda26d74a20",
+    "timestamp": "2025-12-02 18:31:05.557559",
+    "report_generated": false
+  },
+  {
+    "question": "In registerVault() (lines 195-235), the function validates that IERC7575(vaultAddress).asset() matches the provided asset parameter (line 200). However, if the vault contract's asset() function is malicious and returns different values on subsequent calls (stateful return), could an attacker register a vault with one asset but later use it to mint shares for a different asset, violating the one-to-one asset-vault mapping invariant?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_dd1c418d-98a7-4d48-9e27-f3e0ff13976b",
+    "timestamp": "2025-12-02 18:31:27.201154",
+    "report_generated": false
+  },
+  {
+    "question": "The initialize() function enforces decimals() == DecimalConstants.SHARE_TOKEN_DECIMALS (line 121-123). If DecimalConstants.SHARE_TOKEN_DECIMALS is changed in a future version but the check remains hardcoded to 18, could this create an inconsistency where new deployments fail initialization while the constant definition has changed, or worse, allow initialization with wrong decimals if the constant changes but the check is not updated?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_07b86793-8f55-49de-bb64-e5f02c1955ef",
+    "timestamp": "2025-12-02 18:31:50.732320",
+    "report_generated": false
+  },
+  {
+    "question": "The ShareTokenStorage struct (lines 83-93) uses EnumerableMap.AddressToAddressMap for assetToVault. If during an upgrade, the new implementation changes the struct layout by reordering fields or adding new fields before existing ones, could this cause storage slot misalignment where vaultToAsset mapping or operators mapping read from incorrect storage slots, leading to unauthorized vault access or operator permission corruption?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_bae8b8ff-fed9-4b2c-ab89-fa0f8c04a7a2",
+    "timestamp": "2025-12-02 18:32:17.168835",
+    "report_generated": false
+  },
+  {
+    "question": "In the constructor (lines 106-108), _disableInitializers() is called to prevent initialization of the implementation contract. However, if the implementation is deployed without a proxy and someone accidentally sends shares or assets to the implementation address, could these funds become permanently locked since the implementation is uninitialized and has no owner to recover them?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_12311b9e-f2e1-47a4-811c-911fe5c5ff7f",
+    "timestamp": "2025-12-02 18:32:45.136447",
+    "report_generated": false
+  },
+  {
+    "question": "The initialize() function (lines 116-124) uses the 'initializer' modifier and checks if decimals() == 18. However, the function calls __ERC20_init() which sets the token name and symbol. If an attacker deploys a malicious proxy pointing to this implementation and calls initialize() with their own parameters before the legitimate owner, could they permanently set themselves as the owner via __Ownable_init(owner), gaining control over vault registration and investment configuration?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_81683e89-483d-43f7-9aa7-2aa56e54fdd3",
+    "timestamp": "2025-12-02 18:33:13.799809",
+    "report_generated": false
+  },
+  {
+    "question": "In ShareTokenUpgradeable._getShareTokenStorage() (lines 98-103), the storage slot is calculated as keccak256('erc7575.sharetoken.storage'). If a future upgrade introduces a new contract that inherits from ShareTokenUpgradeable and uses the same storage slot calculation pattern without proper namespace separation, could this lead to storage collision where two different contracts write to the same storage location, corrupting the assetToVault mapping or operator approvals?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_ded1837d-9724-47bc-82d6-66f2fb8562e4",
+    "timestamp": "2025-12-02 18:33:43.697126",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575ShareToken.rBatchTransfers() (lines 1119-1202) uses rBalanceFlags passed as a parameter (line 1119)",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_64f97b47-885c-4076-905c-b351195f1556",
+    "timestamp": "2025-12-02 18:34:14.538180",
+    "report_generated": false
+  },
+  {
+    "question": "In WERC7575ShareToken.computeRBalanceFlags() (lines 870-922), the function validates flag consistency: when an account is found again in a later transfer, it checks if the rBalance flag from the current transfer matches the flag already set from the first discovery (lines 877-894 for debtors, 901-918 for creditors). If the flags are inconsistent, it reverts with InconsistentRAccounts (lines 892, 916). Can an attacker exploit this by deliberately submitting boolean flag arrays (debtorsRBalanceFlags, creditorsRBalanceFlags) that have inconsistent flags for the same account? For example, if Alice is debtor in transfer 0 with flag=true, and debtor in transfer 5 with flag=false, the function reverts. However, can the attacker manipulate the order of transfers to avoid detection?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_0b4e7bdf-4ca7-4d4b-8daa-273c1e6d1346",
+    "timestamp": "2025-12-02 18:34:46.143144",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575ShareToken.computeRBalanceFlags() (lines 802-963) is a pure function that computes a bitmap indicating which aggregated accounts need rBalance updates. The function replicates the exact account aggregation logic from consolidateTransfers() (lines 851-958 mirror 1023-1061). However, if the two functions diverge due to a code maintenance error (e.g., consolidateTransfers() is modified but computeRBalanceFlags() is not), can this cause rBalanceFlags to have bits set for the wrong account positions? For example, if consolidateTransfers() changes the order of account discovery, accounts[i] in consolidateTransfers() might no longer match the account at position i in computeRBalanceFlags(), causing rBatchTransfers() to update the wrong accounts' rBalances.",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_6ccae427-3efd-4544-8ec8-d02b41919f5c",
+    "timestamp": "2025-12-02 18:35:18.098130",
+    "report_generated": false
+  },
+  {
+    "question": "In WERC7575ShareToken.consolidateTransfers() (lines 1046-1055), when creating new account entries, the function checks if addFlags has bit 0 set (line 1046) for debtor and bit 1 set (line 1051) for creditor. At lines 1048 and 1053, it increments accountsLength after adding each new account. Can an attacker exploit an off-by-one error where accountsLength reaches exactly 2*debtorsLength, causing the next account addition to write to accounts[2*debtorsLength], which is out of bounds? The allocation is 'new DebitAndCredit[](debtorsLength * 2)' (line 1019), so valid indices are 0 to 2*debtorsLength-1. If accountsLength reaches 2*debtorsLength and another account is added, does this cause array out-of-bounds?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_4e33994f-81fc-4bed-a6f9-7fd1e2d7db52",
+    "timestamp": "2025-12-02 18:35:51.621160",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575ShareToken.batchTransfers() (lines 700-734) calls consolidateTransfers() to aggregate accounts, then iterates through accountsLength at lines 704-723. At line 708, the function reads 'uint256 debtorBalance = _balances[account.owner]' and checks if debtorBalance < amount (line 709). However, can an attacker exploit the case where an account appears multiple times in the accounts array (due to a bug in consolidateTransfers()) and each occurrence decreases the balance? For example, if Alice appears at accounts[0] with net_debit=100 and also at accounts[5] with net_debit=50, does the loop process both entries, causing _balances[Alice] to be decremented twice?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_f6de3c9e-d3cf-4212-86fc-a974c22d44c0",
+    "timestamp": "2025-12-02 18:36:25.664019",
+    "report_generated": false
+  },
+  {
+    "question": "In WERC7575ShareToken.consolidateTransfers() (lines 1034-1043), the inner loop checks if accounts[j].owner == debtor (line 1035) or accounts[j].owner == creditor (line 1038). The check uses 'else if' at line 1038, which assumes debtor != creditor (self-transfers already skipped at line 1029). However, can there be a vulnerability if the accounts array has duplicate entries due to a logic error? For example, if accounts[0] and accounts[5] both have owner = Alice, and a transfer involving Alice is processed, will the inner loop find her at position 0 and skip checking position 5, causing her credit/debit to be split incorrectly?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_b65deeae-67b7-4869-8012-b7f814f8bd55",
+    "timestamp": "2025-12-02 18:37:00.838205",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575ShareToken.consolidateTransfers() (lines 1006-1062) allocates accounts array with size 'debtorsLength * BATCH_ARRAY_MULTIPLIER' (line 1019), where BATCH_ARRAY_MULTIPLIER = 2 (line 119). This assumes at most 2N unique addresses (N debtors + N creditors). However, can an attacker craft a batch where the same address appears multiple times in both debtors and creditors arrays, but in a pattern that causes accountsLength to exceed 2N? For example, if all N transfers have unique debtor-creditor pairs, accountsLength = 2N, which fits. But if there's an off-by-one error in the allocation, can the function write beyond the accounts array bounds, causing memory corruption?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_71d8ed82-1519-43e0-a3d1-4837565b36ca",
+    "timestamp": "2025-12-02 18:37:35.278377",
+    "report_generated": false
+  },
+  {
+    "question": "In WERC7575ShareToken.consolidateTransfers() (lines 1006-1062), the inner loop (lines 1034-1043) iterates through accountsLength to find existing accounts. The loop uses 'addFlags != 0' as an early exit condition (line 1034). Can an attacker exploit the case where debtor and creditor are the same address (wait, line 1029 skips those) but appear in different transfers? For example, if the batch is [Alice→Bob 100, Bob→Alice 50, Alice→Charlie 75], Alice appears as both debtor and creditor. When processing the second transfer (Bob→Alice), the loop finds Alice at position 0 and increments accounts[0].credit += 50 (line 1040). Is this correct, or should Alice have separate entries for her debtor and creditor roles?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_c08fa5a5-8e39-4b32-a13d-b5d64f3907a6",
+    "timestamp": "2025-12-02 18:38:08.510254",
+    "report_generated": false
+  },
+  {
+    "question": "In WERC7575ShareToken._update() (lines 519-547), the function handles minting (from == address(0)), burning (to == address(0)), and regular transfers. At line 546, it emits a Transfer event. However, if from == to (self-transfer), does _update() correctly handle this? Lines 524-532 would first subtract value from _balances[from], then lines 539-544 would add value back to _balances[to] (which is the same address). This works correctly, but does it unnecessarily consume gas? More importantly, if there's any reentrancy or callback during this process, could an attacker exploit the temporary balance reduction (after line 530 but before line 542) to break invariants?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_f85b6704-2abc-4c22-9887-5ce6a14e6342",
+    "timestamp": "2025-12-02 18:38:41.158870",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575ShareToken.transfer() (lines 472-477) calls _spendAllowance(from, from, value) at line 475. If a user attempts to transfer tokens to themselves (transfer(msg.sender, 100)), does the function correctly handle this edge case? The call to _spendAllowance(msg.sender, msg.sender, 100) would decrement allowance[msg.sender][msg.sender], and then super.transfer(msg.sender, 100) would attempt to transfer tokens from msg.sender to msg.sender. Does OpenZeppelin's ERC20.transfer() skip self-transfers (like consolidateTransfers() does), or does it actually move _balances[msg.sender] -= 100 and _balances[msg.sender] += 100, which nets to zero but still consumes self-allowance? Can this be exploited to drain a user's self-allowance without actually moving tokens?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_ab8d5f74-3013-4414-b0ac-b5cedc820a02",
+    "timestamp": "2025-12-02 18:39:14.023187",
+    "report_generated": false
+  },
+  {
+    "question": "In WERC7575ShareToken.batchTransfers() (lines 700-734), after consolidation, the function emits Transfer events for ALL original transfers at lines 726-731, including self-transfers. Line 727 emits 'emit Transfer(debtors[i], creditors[i], amounts[i])' for every i. Can an attacker exploit this by submitting self-transfers (debtor == creditor) which are skipped in balance updates (line 1029 in consolidateTransfers()) but still emit Transfer events? Off-chain indexers that listen to Transfer events would see tokens moving, but on-chain balances wouldn't change. Can this be used to manipulate accounting, trigger false alerts, or exploit protocols that rely on Transfer events for bookkeeping?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_1f06344d-d577-4c98-a2eb-25e4b90af7d3",
+    "timestamp": "2025-12-02 18:39:49.693626",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575ShareToken.consolidateTransfers() (lines 1006-1062) skips self-transfers at line 1029: 'if (debtor != creditor)'. This means transfers where debtor == creditor are ignored and don't appear in the consolidated accounts array. Can an attacker exploit this by submitting batch transfers that include self-transfers to manipulate the zero-sum calculation? For example, if the batch is [Alice→Alice 100, Bob→Charlie 100, Charlie→Bob 100], the self-transfer is skipped, leaving Bob→Charlie and Charlie→Bob which net to zero. However, if the validator miscalculates and includes the self-transfer in their accounting, can there be a mismatch between on-chain state (which ignores self-transfers) and off-chain expectations?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_4de62826-b9bb-44f8-a522-44642ff8fc2a",
+    "timestamp": "2025-12-02 18:40:24.125335",
+    "report_generated": false
   }
 ]
