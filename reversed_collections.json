@@ -1498,5 +1498,35 @@
     "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_9a354be9-055e-4559-82c9-29e30db1a9f8",
     "timestamp": "2025-12-02 19:04:20.976553",
     "report_generated": false
+  },
+  {
+    "question": "WERC7575Vault.previewDeposit() uses Floor rounding (line 253) while previewMint() uses Ceil rounding (line 260). If a user calculates expected shares using previewDeposit() but calls mint() instead of deposit(), can they receive fewer shares than expected due to the rounding difference?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_43dfb8fc-f67d-46ef-aca0-567d5fe45c64",
+    "timestamp": "2025-12-02 19:05:32.002737",
+    "report_generated": false
+  },
+  {
+    "question": "In WERC7575Vault._convertToAssets() (lines 237-246), if _scalingFactor == 1 (asset has 18 decimals), the function returns shares directly (line 242). Otherwise, it divides shares by scalingFactor (line 244). Can this branching logic introduce inconsistencies in conversion accuracy between 18-decimal assets and lower-decimal assets?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_5686f48e-5054-416d-a046-653303789a71",
+    "timestamp": "2025-12-02 19:05:45.292821",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575Vault._convertToShares() (lines 215-220) multiplies assets by _scalingFactor using Math.mulDiv(assets, scalingFactor, 1, rounding). If assets is very large (close to uint256 max), can the multiplication overflow despite using Math.mulDiv, causing the conversion to revert or return incorrect values?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_41c760f4-a966-4ee1-b54f-40a75a5ccf09",
+    "timestamp": "2025-12-02 19:05:59.442499",
+    "report_generated": false
+  },
+  {
+    "question": "In WERC7575Vault.redeem() (lines 464-467), shares are burned from owner (line 408) and assets are transferred to receiver (line 409). If the burn succeeds but the transfer fails due to SafeTokenTransfers checks, can shares be burned without assets being transferred, causing permanent loss of user funds?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_28a851c3-17ae-4047-a862-09e8b3d3b010",
+    "timestamp": "2025-12-02 19:06:14.507644",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575Vault._withdraw() (lines 397-411) calls _shareToken.spendSelfAllowance(owner, shares) (line 407) before burning shares. If the owner does not have sufficient self-allowance despite having shares, can this prevent them from withdrawing their assets, effectively locking their funds?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_0b63328b-0363-49b0-bcb1-8d3a832266df",
+    "timestamp": "2025-12-02 19:06:29.425503",
+    "report_generated": false
   }
 ]
