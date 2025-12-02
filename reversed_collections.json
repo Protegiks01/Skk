@@ -748,5 +748,155 @@
     "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_872e885d-0ab7-4bae-91f5-428a7aec97da",
     "timestamp": "2025-12-02 18:05:43.141547",
     "report_generated": false
+  },
+  {
+    "question": "The setInvestmentManager() function (lines 659-676) iterates through all vaults and calls vault.setInvestmentManager(). If one of the vaults has a malicious setInvestmentManager() that reenters into setInvestmentManager() again with a different parameter, could this create a recursive loop or inconsistent manager settings across vaults where some have the new manager and others are reverted to old values?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_afc43d41-d2c0-4fd9-8753-e6181ba97ff3",
+    "timestamp": "2025-12-02 18:06:55.516759",
+    "report_generated": false
+  },
+  {
+    "question": "In _configureVaultInvestmentSettings() (line 542), the function calls IERC7575ShareExtended(investmentShareToken).vault(asset) which is an external call to a user-configurable investment ShareToken. If that call has a reentrancy hook, could an attacker manipulate the returned investment vault address mid-execution to point to a malicious vault, causing ERC7575VaultUpgradeable(vaultAddress).setInvestmentVault() to configure incorrect investment targets?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a210d5a1-259c-494c-8c25-9a9397cd7f90",
+    "timestamp": "2025-12-02 18:07:08.794066",
+    "report_generated": false
+  },
+  {
+    "question": "In registerVault() (line 200), the function calls IERC7575(vaultAddress).asset() where vaultAddress is user-provided. If the vault contract has a malicious asset() function that performs reentrancy back into registerVault() or other ShareToken functions, could this violate the CEI pattern by modifying assetToVault mapping before all validation checks are complete, potentially causing inconsistent state?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_7e89076f-c728-4285-b6fb-fe4c69b5c76a",
+    "timestamp": "2025-12-02 18:07:22.516534",
+    "report_generated": false
+  },
+  {
+    "question": "In isVault() (lines 337-340), the function checks if $.vaultToAsset[vaultAddress] != address(0). However, if address(0) is somehow a valid asset address on certain chains or L2s, could this function incorrectly return false for a legitimately registered vault with asset = address(0), breaking vault authorization checks?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_20ddf25b-b436-4122-bff0-1c3ec55ae467",
+    "timestamp": "2025-12-02 18:07:36.687594",
+    "report_generated": false
+  },
+  {
+    "question": "The getInvestmentShareToken() view function (lines 594-597) returns $.investmentShareToken which could be address(0) if not yet configured. If callers don't check for zero address and attempt to call functions on it, could this cause unexpected reverts in off-chain systems or frontends that assume an investment ShareToken is always configured?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_e1e0c7da-c194-45c9-95e9-2ec577e16a11",
+    "timestamp": "2025-12-02 18:07:51.524032",
+    "report_generated": false
+  },
+  {
+    "question": "In getCirculatingSupplyAndAssets() (line 387), totalSupply() is called which includes all shares, including those held by vaults. If a vault mints shares to itself (which is technically possible via the mint() function), could this inflate totalSupply without corresponding assets, causing circulatingSupply calculation to be incorrect and distorting conversion ratios?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_3ac522a5-c5fa-4c34-a33b-db134a7211f5",
+    "timestamp": "2025-12-02 18:08:07.632212",
+    "report_generated": false
+  },
+  {
+    "question": "The vault() function (lines 143-146) uses tryGet() and returns (bool, address). However, the function signature is declared as 'returns (address vaultAddress)' which only returns the address, not the boolean. If a caller assumes the returned address(0) means 'not found' but the function actually discards the boolean return value, could callers incorrectly treat address(0) as a valid vault address, leading to failed transactions or incorrect asset routing?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_ecadfc82-b5c6-49b0-bd50-0f65789c5e5f",
+    "timestamp": "2025-12-02 18:08:25.967559",
+    "report_generated": false
+  },
+  {
+    "question": "In unregisterVault() (line 323), the function calls $.assetToVault.remove(asset) which removes the entry from the EnumerableMap. If the remove operation doesn't properly clean up internal array indices in the EnumerableMap implementation, could this leave dangling references that cause at(i) in subsequent iterations to return stale vault addresses, leading to accounting errors in getCirculatingSupplyAndAssets()?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a05103b1-38e3-4f68-a57e-cb616d0a11a4",
+    "timestamp": "2025-12-02 18:08:45.541264",
+    "report_generated": false
+  },
+  {
+    "question": "The assetToVault.length() check (line 210) in registerVault() uses EnumerableMap.length() which is an O(1) operation. However, if the EnumerableMap library has a bug where length() is not decremented correctly when remove() is called in unregisterVault() (line 323), could the counter become permanently inaccurate, eventually blocking new vault registrations even though the actual number of vaults is below MAX_VAULTS_PER_SHARE_TOKEN?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_5f8ca87a-febd-4a25-90ff-d9a2309e22b3",
+    "timestamp": "2025-12-02 18:09:06.297055",
+    "report_generated": false
+  },
+  {
+    "question": "In setInvestmentShareToken() (lines 580-584), the function iterates through all vaults and configures investment settings. If the EnumerableMap is modified during iteration (e.g., if _configureVaultInvestmentSettings() somehow triggers a vault registration via reentrancy), could this cause skipped iterations or repeated processing of the same vault, leading to incorrect investment configuration?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_70a01eda-5d26-4750-bbf9-f494d25f51f7",
+    "timestamp": "2025-12-02 18:09:29.107742",
+    "report_generated": false
+  },
+  {
+    "question": "The getCirculatingSupplyAndAssets() function (lines 369-390) iterates through $.assetToVault using at(i) in a for loop (lines 374-381). If during the iteration, a vault's getClaimableSharesAndNormalizedAssets() call consumes excessive gas or reverts, could this make the entire conversion system unusable, bricking deposits and redemptions across all vaults since conversion functions depend on this view?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_5a8398d4-5797-4b5b-b7e4-91c9f087966e",
+    "timestamp": "2025-12-02 18:09:53.949569",
+    "report_generated": false
+  },
+  {
+    "question": "In getRegisteredAssets() (lines 354-357), the function returns $.assetToVault.keys() which creates a new memory array and copies all keys. If MAX_VAULTS_PER_SHARE_TOKEN is set to 10 but an attacker registers exactly 10 vaults with long address arrays, could the gas cost of this view function exceed block gas limits on certain L2s, causing off-chain indexers and frontends to fail when querying registered assets?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_93c98562-aa39-40e5-827b-2db16d164406",
+    "timestamp": "2025-12-02 18:10:19.332438",
+    "report_generated": false
+  },
+  {
+    "question": "After an upgrade, if the new implementation changes the EnumerableMap.AddressToAddressMap structure or adds new mandatory initialization steps in _getShareTokenStorage(), but existing proxies are already initialized, could the storage slot return corrupted data? For example, if the new implementation expects additional fields in ShareTokenStorage but the storage was initialized with the old struct layout?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_13ca2e2c-f974-4225-a085-6572ea41a0f3",
+    "timestamp": "2025-12-02 18:10:45.653642",
+    "report_generated": false
+  },
+  {
+    "question": "The upgradeTo() and upgradeToAndCall() functions don't have any time-delay or multi-sig requirements. If the owner's hot wallet is compromised in the middle of active vault operations (deposits pending, investments active), could the attacker immediately upgrade to a malicious implementation that steals all investment ShareToken balance (approved as type(uint256).max in line 549) before anyone can react?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_e0825265-0f44-4b32-b3a7-7b16e89299c5",
+    "timestamp": "2025-12-02 18:11:11.583532",
+    "report_generated": false
+  },
+  {
+    "question": "The SHARE_TOKEN_STORAGE_SLOT is calculated as keccak256('erc7575.sharetoken.storage') (line 75). If a future version of the protocol introduces a different contract that also uses this exact namespace string for a different storage struct with different field layouts, could an upgrade to that implementation cause catastrophic storage corruption where assetToVault reads from what should be operators mapping?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_6cb5106d-7dad-40f0-b4ff-91bc05b93977",
+    "timestamp": "2025-12-02 18:11:38.139989",
+    "report_generated": false
+  },
+  {
+    "question": "The ShareTokenStorage struct (lines 83-93) doesn't have a gap array (__gap) for future storage expansion. If an upgrade adds new state variables to ShareTokenUpgradeable, these would be stored after the ERC-7201 namespaced storage. Could this cause storage collision if inherited contracts (ERC20Upgradeable, Ownable2StepUpgradeable) later add new variables in their storage layout, corrupting the ShareToken-specific data?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_08628a64-161f-49eb-af70-6f73b149b7bc",
+    "timestamp": "2025-12-02 18:12:05.951536",
+    "report_generated": false
+  },
+  {
+    "question": "In upgradeToAndCall() (lines 787-789), the function accepts arbitrary 'data' calldata that gets executed on the new implementation via delegatecall. If the owner accidentally passes malicious calldata or the new implementation has a selfdestruct in its initialization function, could this brick the proxy by destroying the implementation, making all ShareToken funds permanently inaccessible?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_8c4762e7-0200-4f1c-a3de-4bd2cc3c87cd",
+    "timestamp": "2025-12-02 18:12:34.529998",
+    "report_generated": false
+  },
+  {
+    "question": "The upgradeTo() function (lines 778-780) calls ERC1967Utils.upgradeToAndCall(newImplementation, '') and is protected by onlyOwner. However, if the owner's private key is compromised, the attacker could upgrade to a malicious implementation that changes the _getShareTokenStorage() function to return a different storage slot, effectively resetting all assetToVault mappings, operators, and investment configurations, causing complete loss of protocol state?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_0d5d1246-569f-422f-a7fb-40a326d15730",
+    "timestamp": "2025-12-02 18:13:04.600952",
+    "report_generated": false
+  },
+  {
+    "question": "The vaultTransferFrom() function allows vaults to transfer shares from any 'from' address to any 'to' address without allowance checks. If a vault has a bug in its requestRedeem() logic that doesn't validate msg.sender is the owner or an approved operator, could the vault inadvertently enable anyone to call requestRedeem(victim) which then calls vaultTransferFrom(victim, vault, amount), stealing the victim's shares?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_85e6bb32-c4af-42f9-b8ad-e1d413ee9526",
+    "timestamp": "2025-12-02 18:13:34.170777",
+    "report_generated": false
+  },
+  {
+    "question": "In mint() and burn(), there's no check that the account parameter is KYC-verified. While ERC20's _mint and _burn don't transfer (so no KYC check is expected in WERC7575ShareToken), if a vault mints shares to a non-KYC address, could those shares become permanently frozen since they can't be transferred due to KYC requirements, effectively reducing total supply and affecting conversion ratios?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_7ee6f1bb-a069-445a-abd4-8365f420872d",
+    "timestamp": "2025-12-02 18:14:04.234187",
+    "report_generated": false
+  },
+  {
+    "question": "The onlyVaults modifier (lines 127-131) only checks if msg.sender is a registered vault, but doesn't validate which vault is authorized to mint/burn shares for which asset. If vault A (for USDC) calls mint() to issue shares for a USDT deposit, could this create incorrect share issuance where shares don't match the asset backing, breaking the multi-asset architecture?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_36b7a80e-ce98-4872-810b-6163cbb8c65b",
+    "timestamp": "2025-12-02 18:14:34.300300",
+    "report_generated": false
+  },
+  {
+    "question": "In vaultTransferFrom() (lines 749-760), the function performs a direct _transfer(from, to, amount) without checking allowance since it's onlyVaults. If a malicious vault calls vaultTransferFrom(userA, attackerAddress, amount), could it steal shares from userA without any authorization, violating the security model that assumes vaults only transfer shares as part of legitimate deposit/redeem operations?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a70705d2-eea8-4507-95a9-fb2162253e06",
+    "timestamp": "2025-12-02 18:15:03.259450",
+    "report_generated": false
+  },
+  {
+    "question": "The spendAllowance() function (lines 422-424) is onlyVaults and calls _spendAllowance(owner, spender, amount). If a vault calls this with spender as an arbitrary address, could the vault manipulate allowances between any two users without their consent, potentially setting up unauthorized transfers that violate the dual allowance model?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_9a28b6f1-319a-4162-a9dd-25d5e0c4743c",
+    "timestamp": "2025-12-02 18:15:32.950967",
+    "report_generated": false
+  },
+  {
+    "question": "In burn() (lines 412-414), the function is onlyVaults and directly calls _burn(account, amount). If a malicious vault calls burn(userA, userA.balance) when userA has pending claimable redemptions, could this burn shares that should be held by the vault for redemption claims, causing the user's claimable redemptions to become unredeemable since the shares no longer exist?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_2058109c-b480-445c-b424-3c14ae0a0ccb",
+    "timestamp": "2025-12-02 18:16:02.470986",
+    "report_generated": false
+  },
+  {
+    "question": "The mint() function (lines 400-402) has the onlyVaults modifier which checks $.vaultToAsset[msg.sender] != address(0) (lines 127-131). If a vault is registered, mints shares, then gets unregistered (which deletes $.vaultToAsset[vaultAddress] on line 324), could users who received those shares before unregistration continue to hold tokens that no longer have a backing vault, creating orphaned shares that can't be redeemed?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_d1d47216-4540-4cab-8e3e-a8a2fdbb4717",
+    "timestamp": "2025-12-02 18:16:31.970438",
+    "report_generated": false
   }
 ]
