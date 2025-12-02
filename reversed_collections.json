@@ -148,5 +148,155 @@
     "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_210ac76c-b77b-4dd5-9fdc-0ecfee01e409",
     "timestamp": "2025-12-02 17:20:16.319100",
     "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.getClaimableSharesAndNormalizedAssets() (lines 1531-1538), vaultAssets is calculated via totalAssets() and then normalized. If totalAssets() returns 0 due to the reserved assets issue, can this cause ShareToken's getCirculatingSupplyAndAssets() to miscalculate the global conversion rate, enabling share inflation attacks across all vaults?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_c226e59a-61cd-4acc-a95f-ee9112b73f4b",
+    "timestamp": "2025-12-02 17:21:49.669087",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.totalAssets() (lines 1174-1180), totalPendingDepositAssets represents assets that have been transferred to the vault but not yet converted to shares. If these assets are invested via investAssets() before fulfillDeposit() is called, can this create a scenario where totalAssets() correctly excludes them as reserved, but they're also no longer in the vault balance, causing permanent accounting mismatch?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_532b4886-c273-4325-9f19-aca7e33f2481",
+    "timestamp": "2025-12-02 17:22:02.884038",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.totalAssets() (lines 1174-1180), the function excludes invested assets intentionally. However, if an investment manager withdraws from investment to fulfill redemptions, are the withdrawn assets immediately available in balance, or is there a window where assets are in transit, causing totalAssets() to undercount and enabling double-investment?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_faaf3c28-f1c4-48c6-9da3-2a9da97735f7",
+    "timestamp": "2025-12-02 17:22:16.941041",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.totalAssets() (lines 1174-1180), if balance < reservedAssets, the function returns 0. Can an attacker exploit this by requesting massive cancelations (which increase totalCancelDepositAssets) to force totalAssets() to 0, causing convertToShares() to fail and preventing any new fulfillments from succeeding?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_b9fba5ec-4917-410d-904e-e201b233df4b",
+    "timestamp": "2025-12-02 17:22:31.038084",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.totalAssets() (lines 1174-1180), the calculation is balance - reservedAssets where reservedAssets = totalPendingDepositAssets + totalClaimableRedeemAssets + totalCancelDepositAssets. If an investment manager invests assets, then users request large redemptions that are fulfilled, can totalClaimableRedeemAssets grow larger than the vault's balance, causing totalAssets() to return 0 and breaking all conversion rate calculations?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_0e89199c-edea-422e-bdbc-b9f9c89387a0",
+    "timestamp": "2025-12-02 17:22:45.788036",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.fulfillRedeem() (lines 822-841), the investment manager can fulfill redeems partially. If they fulfill only 1 wei of pending shares repeatedly, can they bloat the claimableRedeemShares state for a controller, causing excessive gas costs when that controller eventually tries to redeem all their claimable shares?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_ece3a133-fe29-4f5b-988b-a960520c7f11",
+    "timestamp": "2025-12-02 17:23:01.975688",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.fulfillDeposit() (lines 425-445), the investment manager can fulfill any pending deposit for any controller at any conversion rate (determined by totalAssets at fulfillment time). Can the investment manager selectively fulfill deposits when conversion rates are unfavorable to users, or delay fulfillments to manipulate the asset-to-share ratio?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a33745be-d8c8-4ffc-a42d-e97a84d81ae6",
+    "timestamp": "2025-12-02 17:23:20.228874",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.withdrawFromInvestment() (lines 1477-1509), the investment manager is trusted to pass accurate amount parameters. If they pass amount > actualAmount that can be withdrawn from the investment vault, can this cause a revert in the investment vault's redeem() call, permanently bricking withdrawals from investment?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_8aab0f8f-3046-4195-a930-9f5b9bc27173",
+    "timestamp": "2025-12-02 17:23:40.355679",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.investAssets() (lines 1448-1465), only the investment manager can invest. However, if the investment manager address is set to a contract that anyone can call into (like a proxy or multisig with broad permissions), can unauthorized users indirectly trigger investAssets() through that contract, potentially over-investing and causing failed redemptions?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a4489faf-8b30-4f9c-a93e-447a840f02c7",
+    "timestamp": "2025-12-02 17:24:02.078059",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.setInvestmentManager() (lines 1379-1387), both the owner and the ShareToken can set the investment manager. If the ShareToken is compromised or has a bug, can it set a malicious investment manager who then calls fulfillDeposit() to mint shares to arbitrary addresses or fulfillRedeem() to drain the vault?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_1c3990d8-774a-416b-938a-3b3cf100eed5",
+    "timestamp": "2025-12-02 17:24:26.850929",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.deposit() (lines 557-589), when availableAssets == assets (full claim), the controller is removed from activeDepositRequesters (line 575). However, if a user has multiple partial fulfillments and claims them in separate transactions, is the removal only done on the final claim, or can this cause premature removal while claimable amounts remain?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_83705cdd-fd30-49f2-9d84-71d7405cf303",
+    "timestamp": "2025-12-02 17:24:51.440068",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable._paginateControllerStatus() (lines 2074-2105), the function uses addressSet.values(offset, offset + limit) which relies on EnumerableSet's built-in range function. If offset > addressSet.length(), does this revert or return an empty array? Can incorrect pagination parameters cause unexpected behavior in off-chain integrations?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_9a46e0fe-0b9c-4db9-8243-4530ac9d5ab7",
+    "timestamp": "2025-12-02 17:25:17.656876",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.cancelDepositRequest() (lines 1574-1595), the controller is removed from activeDepositRequesters (line 1592) but added to controllersWithPendingDepositCancelations (line 1591). If controllersWithPendingDepositCancelations has no size limit, can an attacker cancel and re-request deposits repeatedly to bloat this set, causing excessive gas costs for investment manager operations that iterate over it?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_45e56fd6-c1e2-481a-a36e-00c4bbd36ec0",
+    "timestamp": "2025-12-02 17:25:44.438930",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.fulfillDeposits() (lines 453-484), the activeDepositRequesters set is not modified during batch fulfillment—only when deposit() or mint() fully claims. If the investment manager partially fulfills deposits in batches, can the activeDepositRequesters set grow unbounded, eventually causing getActiveDepositRequesters() to always revert?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_3083e36b-2dbe-4e3a-a64d-98f97eadd8a0",
+    "timestamp": "2025-12-02 17:26:13.114793",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.getActiveDepositRequesters() (lines 1910-1916), if more than 100 active requesters exist, the function reverts with TooManyRequesters. Can a malicious attacker create 100+ tiny deposit requests (above minimum but small) to permanently DoS this view function, preventing off-chain systems from fetching the list and breaking investment manager tooling?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_69d5e8b8-4edd-46d3-9398-ade9fd9d4ddf",
+    "timestamp": "2025-12-02 17:26:41.426921",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.requestRedeem() (lines 715-751), shares are transferred to the vault using ShareToken.vaultTransferFrom(). If the ShareToken's balance tracking has a bug where this transfer doesn't properly increment the vault's balance, can fulfillRedeem() later attempt to calculate assets for shares the vault doesn't actually hold, breaking the redemption flow?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_74856536-8a9e-4b95-90ec-299aaff60c74",
+    "timestamp": "2025-12-02 17:27:11.131876",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.redeem() (lines 885-918), if availableAssets == assets (full redemption), the function deletes both claimableRedeemAssets and claimableRedeemShares. However, if there's a rounding dust of 1 wei in availableShares that wasn't claimed, does this deletion permanently trap that 1 wei of shares in the vault, never to be burned?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_ba82d025-f103-40ca-b186-732585afa5bf",
+    "timestamp": "2025-12-02 17:27:42.480107",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.withdraw() (lines 927-962), shares are calculated but if shares == 0 due to rounding, the burn() call (line 956) may succeed with zero shares. Does this cause unnecessary state updates and gas waste, or can it enable an attacker to repeatedly call withdraw() with dust amounts to grief the system?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_648459ab-6598-4e7f-89ef-ee32b46df60e",
+    "timestamp": "2025-12-02 17:28:14.300520",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.fulfillRedeem() (lines 822-841), shares are added to totalClaimableRedeemShares (line 837) to track shares held by vault for burning. If totalClaimableRedeemShares overflows (extremely unlikely with uint256), can this cause totalAssets() to incorrectly calculate reserved assets, enabling over-investment?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_b42e48b6-df4d-4c54-bb16-e6048d524d4b",
+    "timestamp": "2025-12-02 17:28:47.125531",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.redeem() (lines 885-918), ShareToken.burn(address(this), shares) is called to burn shares held by the vault. If the ShareToken's burn() function has a bug that doesn't properly decrement totalSupply, can this cause a permanent divergence between actual circulating supply and the ShareToken's totalSupply(), breaking conversion ratios?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_5159eb01-2362-49b2-a1ff-0d4df157f8f3",
+    "timestamp": "2025-12-02 17:29:21.805021",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.requestDeposit() (lines 341-371), the vault must be active ($.isActive check at line 343). If the owner deactivates the vault after many users have pending deposits but before fulfillDeposit() is called, are those pending deposits stuck forever, or can they only be recovered via ERC7887 cancelation?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_178f9779-7650-440f-ba56-b47671b56659",
+    "timestamp": "2025-12-02 17:29:56.905923",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.fulfillDeposit() (lines 425-445), if the investment manager calls fulfillDeposit() with assets that are only slightly less than pendingDepositAssets[controller], the remaining dust in pending state may be too small to fulfill later due to the ZeroShares revert. Can this trap user funds in pending state permanently?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_59c5fca0-456b-4f6d-b4e4-f4d074c66a9a",
+    "timestamp": "2025-12-02 17:30:31.786927",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.requestDeposit() (lines 341-371), the ownerBalance check (lines 349-352) occurs before the asset transfer. If the owner's balance decreases between the check and the safeTransferFrom() call due to another transaction, can this cause the transfer to fail, leaving pendingDepositAssets[controller] incremented without assets being transferred?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_0c4a686a-226d-47f6-b77c-84d693fa72f0",
+    "timestamp": "2025-12-02 17:31:04.796826",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.setMinimumDepositAmount() (lines 1433-1436), the owner can set minimumDepositAmount to any uint16 value without validation. If set to 0, can users request deposits of 1 wei, creating thousands of tiny pending deposits that bloat the activeDepositRequesters set and cause DoS when iterating over them?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_c09c353e-6b46-4143-9e17-f1205f4c9c53",
+    "timestamp": "2025-12-02 17:31:34.827827",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.requestDeposit() (lines 341-371), deposits below minimumDepositAmount (line 346) are rejected. However, minimumDepositAmount is stored as uint16 and multiplied by 10^assetDecimals. For assets with high decimals (e.g., 18), can the multiplication overflow the uint16, causing the minimum check to pass for amounts that should be rejected?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_47849635-9d75-4640-bdee-69ce23939861",
+    "timestamp": "2025-12-02 17:32:04.884970",
+    "report_generated": false
   }
 ]
