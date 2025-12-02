@@ -1,3 +1,152 @@
 [
-
+  {
+    "question": "In WERC7575ShareToken. batchTransfers(), after computing net amounts, the function updates _balances[account. owner] and _rBalances[account.owner] based on net debit/credit. If a malicious validator (or signature replay) causes the same batch to execute twice, does the lack of idempotency protection allow double-application of the same balance changes, violating token supply conservation?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_9f413daa-c297-440a-8f16-55b86a8a428b",
+    "timestamp": "2025-12-02 17:09:30.641229",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575ShareToken. batchTransfers() skips transfers where debtor == creditor (self-transfers).  If an attacker includes a self-transfer with a non-zero amount in a batch that also includes other transfers affecting the same account, can the skipped self-transfer cause the zero-sum validation to pass while actual net effect is non-zero due to the missing debit/credit pair?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_bd900a5f-0f28-410b-9511-b5eb0834dba3",
+    "timestamp": "2025-12-02 17:09:44.388598",
+    "report_generated": false
+  },
+  {
+    "question": "In WERC7575ShareToken.batchTransfers(), the function checks require(_balances[account.owner] >= netAmount) for net debit accounts (line ~760). If an account participates in the batch with both large debits and large credits that net to a small debit, but _rBalances[account.owner] is substantial, can the function incorrectly allow the transfer by only checking _balances without considering that rBalances should also be updated, leading to inconsistent dual-balance tracking?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_1fa954bb-2811-435c-84b6-6423b465fe85",
+    "timestamp": "2025-12-02 17:09:58.301759",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575ShareToken.transfer() calls _spendAllowance(msg.sender, msg.sender, value) to enforce self-allowance before executing the transfer (line ~90). If a user has self-allowance but is not KYC-verified, and the recipient is KYC-verified, does the KYC check in _update() occur AFTER allowance is spent, allowing a non-KYC'd user to permanently lock their allowance without completing the transfer?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_6606a0b1-af86-46b4-935f-9cd5d1377219",
+    "timestamp": "2025-12-02 17:10:13.655805",
+    "report_generated": false
+  },
+  {
+    "question": "In WERC7575ShareToken. transferFrom(), the function calls _spendAllowance(from, from, value) for self-allowance and then super. transferFrom() which checks allowance[from][msg.sender]. If the self-allowance check passes but the caller allowance is exactly 'value', and super.transferFrom() decrements caller allowance before the transfer completes, can a reentrancy via a malicious token hook in _update() allow the caller to reuse the same allowance for multiple transfers?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_949052db-9db6-4913-a25c-3a4fce53e97d",
+    "timestamp": "2025-12-02 17:10:30.398118",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575ShareToken. approve() explicitly reverts if msg.sender == spender with ERC20InvalidSpender(msg.sender) (line ~121). However, permit() function (if present) processes EIP-712 signatures to set allowances. If permit() does not have the same self-approval block, can an attacker use permit signatures to grant themselves self-allowance, bypassing the validator's permit-based authorization flow?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_e737a6ac-2e8a-42d3-b96f-e97a4061cd9f",
+    "timestamp": "2025-12-02 17:10:49.131984",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575ShareToken.permit() validates EIP-712 signatures with ECDSA. recover() and checks the recovered address matches the owner. If the function does not verify that block.chainid matches the DOMAIN_SEPARATOR's cached chain ID before signature validation, can an attacker replay valid permit signatures from a testnet or forked chain to grant unauthorized allowances on mainnet?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_ca2ec31f-e144-40aa-b255-da8c876d7d28",
+    "timestamp": "2025-12-02 17:11:09.161100",
+    "report_generated": false
+  },
+  {
+    "question": "In WERC7575ShareToken.permit(), the function increments nonces[owner] after signature validation (line ~495). If the nonce increment happens AFTER the _approve() call and a reentrancy occurs during _approve() (e.g., via a malicious spender contract's onApprove hook if implemented), can the attacker reuse the same signature to set allowances multiple times before the nonce increments? ",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_5c4b4674-e040-4343-88da-019cece5e0b7",
+    "timestamp": "2025-12-02 17:11:31.017551",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575ShareToken uses EIP712 domain separator with name, version, chainId, and verifyingContract.  If the contract is deployed behind a proxy (UUPS for upgradeable version) but the DOMAIN_SEPARATOR is calculated in the implementation's constructor/initializer using address(this), does the domain separator mismatch between proxy and implementation addresses invalidate all permit signatures, or can an attacker exploit the mismatch to forge signatures? ",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_806dfecd-8f44-4dc1-bb30-ff1539e0ca99",
+    "timestamp": "2025-12-02 17:11:53.800806",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575ShareToken. adjustrBalance() allows the Revenue Admin to adjust _rBalances and _balances for multiple accounts with amounti (invested) and amountr (returned).  If amountr > amounti (profit scenario), the function increases _balances by (amountr - amounti).  If a malicious Revenue Admin (or compromised key, but admin is TRUSTED) calls this with amountr = type(uint256).max and amounti = 1, does the unchecked profit calculation cause integer overflow, minting unlimited tokens to the account and violating total supply invariant?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_8d7810cb-3fa5-401f-a02c-90a21a22a139",
+    "timestamp": "2025-12-02 17:12:18.022096",
+    "report_generated": false
+  },
+  {
+    "question": "In WERC7575ShareToken.adjustrBalance(), the function stores adjustments in _rBalanceAdjustments[account][ts] for potential cancellation. If the same (account, ts) pair is adjusted twice (replay or mistake), the require statement should prevent double-application. However, if ts is attacker-controlled and not validated against block.timestamp, can an attacker use future timestamps to bypass the 'already applied' check and apply the same adjustment multiple times?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_9831b96b-ab1f-4845-86f9-f00870ad126e",
+    "timestamp": "2025-12-02 17:12:42.219022",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575ShareToken. adjustrBalance() decrements _rBalances[account] by amounti and increments _balances[account] by amountr. If amounti > _rBalances[account] (user has insufficient rBalance), does the function use unchecked arithmetic that allows underflow, resulting in _rBalances[account] wrapping to type(uint256).max and corrupting the dual-balance tracking system?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_39e5fd26-07f4-420a-b322-a93db830a36c",
+    "timestamp": "2025-12-02 17:13:07.323868",
+    "report_generated": false
+  },
+  {
+    "question": "In WERC7575ShareToken.cancelrBalanceAdjustment(), the function reverses a previous adjustment by subtracting amountr from _balances and adding amounti back to _rBalances. If the cancellation is called AFTER the user has already transferred away the amountr tokens, can the cancellation cause _balances[account] to underflow (if _balances[account] < amountr), permanently corrupting the account's balance? ",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_ccbcf49c-34a9-4060-ad00-ec09214dbd59",
+    "timestamp": "2025-12-02 17:13:34.367711",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575ShareToken.registerVault() adds a bidirectional mapping between asset and vault addresses using EnumerableMap and a reverse mapping.  If an attacker (or buggy Owner call, but Owner is TRUSTED) calls registerVault() with an asset that is already registered to a different vault, does the function correctly revert, or can it overwrite the existing mapping and orphan the old vault's mint/burn permissions, preventing legitimate share operations?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_98d6ec45-f2ae-4cd5-af5c-a57c62ef6f50",
+    "timestamp": "2025-12-02 17:14:01.805091",
+    "report_generated": false
+  },
+  {
+    "question": "In WERC7575ShareToken. unregisterVault(), the function removes the asset↔vault mappings.  If a vault still has outstanding shares minted (totalSupply > 0 for that asset's shares) when unregisterVault() is called, does the function allow the unregistration, permanently locking users' ability to burn those shares since mint()/burn() will revert when assetToVault[asset] returns address(0)?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_058e21b7-ab51-41ad-99d4-5ba91addb4c5",
+    "timestamp": "2025-12-02 17:14:27.994039",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575ShareToken.mint() checks that msg.sender == assetToVault[asset] to authorize minting (line ~305). If an attacker deploys a malicious contract and convinces the Owner to register it as a vault for a fake asset, can the attacker's contract mint unlimited shares by calling mint() with arbitrary amounts, then transfer those shares to other users who might unknowingly treat them as legitimate?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_cfb2e69d-eadb-405a-ba61-9965a75b5e97",
+    "timestamp": "2025-12-02 17:14:54.652115",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575ShareToken._update() checks require(isKycVerified[to]) to prevent non-KYC'd addresses from receiving shares (line ~259). However, if 'to' is a contract that implements a fallback function and delegatecalls to another address during the balance update, can the final recipient bypass KYC checks since the require only validates the immediate 'to' address, not the ultimate beneficiary?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_cea64590-6524-439b-9712-c0aa21754370",
+    "timestamp": "2025-12-02 17:15:21.556014",
+    "report_generated": false
+  },
+  {
+    "question": "In WERC7575ShareToken, batchTransfers() updates _balances directly without calling _update() (which contains KYC checks for ERC20. transfer).  If the validator includes a non-KYC'd creditor in a batch transfer, does batchTransfers() enforce KYC via its own logic, or does it bypass the KYC gating entirely, allowing unauthorized addresses to receive shares through batch operations?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_7fb64134-2d7d-489d-80a7-2ddb73561409",
+    "timestamp": "2025-12-02 17:15:46.655141",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575ShareToken.setKycStatus() (if present) is restricted to KYC Admin.  If the KYC Admin revokes KYC for a user who currently holds shares (isKycVerified[user] = false), are the user's existing shares frozen (they can't transfer), or can they still transfer to KYC-verified recipients?  If frozen, can the user's position become permanently locked if KYC is never reinstated?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_105758da-7fea-4823-aed8-40a6c01098f5",
+    "timestamp": "2025-12-02 17:16:11.979062",
+    "report_generated": false
+  },
+  {
+    "question": "ShareTokenUpgradeable uses ERC-7201 namespaced storage with keccak256('erc7575. sharetoken.storage') as the slot.  If a future upgrade adds a new parent contract (e.g., ERC721Enumerable) that uses traditional storage slots (slot 0, 1, 2.. .), can the new parent's storage variables collide with the namespaced storage struct's internal layout, corrupting assetToVault mappings or investmentManager address? ",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_6c92e2be-0d74-401e-94df-6860dc4f7e97",
+    "timestamp": "2025-12-02 17:16:37.379602",
+    "report_generated": false
+  },
+  {
+    "question": "In ShareTokenUpgradeable._getShareTokenStorage(), the function uses inline assembly to load the storage pointer: assembly { $. slot := SHARE_TOKEN_STORAGE_SLOT }. If a compiler bug or future Solidity version changes how storage pointers are accessed in assembly, can this cause the returned storage struct to point to an incorrect slot, leading to reads/writes of arbitrary storage locations?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_d3c9fcb0-c50c-4443-ad8a-755be5c53c8e",
+    "timestamp": "2025-12-02 17:17:03.957280",
+    "report_generated": false
+  },
+  {
+    "question": "ShareTokenUpgradeable's ShareTokenStorage struct includes EnumerableMap. AddressToAddressMap assetToVault (line ~95). If the EnumerableMap library is upgraded in a future version and changes its internal storage layout (e.g., adding a new field), does the new layout corrupt the existing assetToVault data, preventing vaults from being looked up correctly and breaking mint/burn operations?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_d9b9316d-a8e6-4a2d-9930-a03d34327efd",
+    "timestamp": "2025-12-02 17:17:32.647903",
+    "report_generated": false
+  },
+  {
+    "question": "ShareTokenUpgradeable inherits UUPSUpgradeable and overrides _authorizeUpgrade(address newImplementation) with onlyOwner (line ~175). If the Owner's private key is compromised (but Owner is TRUSTED per spec), they could upgrade to a malicious implementation. However, if _authorizeUpgrade does not validate that newImplementation is a contract (e.g., address(newImplementation). code.length > 0), can an attacker trick the Owner into upgrading to an EOA, bricking the proxy?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_2c3a5daf-688d-4bce-9ff9-727436b19a7a",
+    "timestamp": "2025-12-02 17:17:58.418441",
+    "report_generated": false
+  },
+  {
+    "question": "In ShareTokenUpgradeable, if a new implementation is deployed with a different storage layout (e.g., removing the __gap array or reordering ShareTokenStorage fields), does the UUPS upgrade mechanism have any runtime checks to prevent storage corruption, or does it allow the upgrade to proceed, immediately corrupting all assetToVault mappings and investment manager settings upon the first storage write?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_05bff179-2a6e-467e-ac8a-5ec118152709",
+    "timestamp": "2025-12-02 17:18:24.873966",
+    "report_generated": false
+  },
+  {
+    "question": "ShareTokenUpgradeable's initializer function __ShareTokenUpgradeable_init() uses the initializer modifier from OwnableUpgradeable.  If an attacker front-runs the deployment transaction and calls initialize() on the implementation contract (not the proxy) before the legitimate deployer, can the attacker become the owner of the implementation contract, preventing the proxy from initializing correctly (since implementation's initialized flag is set)?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_b2bdbf45-7162-43be-bdc8-c85c1439c30d",
+    "timestamp": "2025-12-02 17:18:52.153560",
+    "report_generated": false
+  }
 ]
