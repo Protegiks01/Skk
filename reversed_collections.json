@@ -448,5 +448,155 @@
     "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_54dd30f6-4c08-4416-bf55-116b4ee59956",
     "timestamp": "2025-12-02 17:42:56.936213",
     "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.fulfillDeposit() (lines 425-445), if the investment manager passes assets=0, the function would calculate shares=0 via _convertToShares() and then revert with ZeroShares. However, does this leave pendingDepositAssets[controller] unchanged, allowing the investment manager to repeatedly attempt zero fulfillments without consequence, while the user's assets remain locked in pending state?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_266f7089-419e-4253-82c2-b28d9e1af8e9",
+    "timestamp": "2025-12-02 17:44:12.907899",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.fulfillCancelDepositRequest() (lines 994-1006), the function moves assets from pendingCancelDepositAssets to claimableCancelDepositAssets without verifying that the assets are actually available in the vault balance. If assets were invested after the cancelation was requested, can this create a claimable cancelation that cannot be fulfilled, causing claimCancelDepositRequest() to always revert?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_49847908-0484-484b-b4c9-b16fe2e2d1d6",
+    "timestamp": "2025-12-02 17:44:26.433667",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.fulfillRedeem() (lines 822-841), the function updates both totalClaimableRedeemAssets and totalClaimableRedeemShares. If these two totals get out of sync due to a bug in one of the fulfill/claim functions, can this cause totalAssets() to miscalculate reserved assets, enabling over-investment that leaves insufficient funds for redemptions?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_78dbabfa-8556-454c-9620-d086258f32e8",
+    "timestamp": "2025-12-02 17:44:40.264977",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.fulfillDeposit() (lines 425-445), claimableDepositAssets[controller] += assets is used to store the exact asset amount. However, if fulfillDeposit() is called multiple times for the same controller with partial amounts, does the += operation correctly accumulate, or can precision loss in the shares calculation cause the stored asset amount to diverge from the actual shares, enabling partial claim exploits?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_ac3205de-c5cd-4a0b-bbd3-cc1cc5105463",
+    "timestamp": "2025-12-02 17:44:57.589456",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.fulfillDeposits() batch function (lines 453-484), the loop accumulates shareAmounts and mints them in a single ShareToken.mint(address(this), shareAmounts) call. If one controller in the batch has pendingAssets < assetAmount, the entire transaction reverts. Can a malicious investment manager grief the system by including invalid controllers in batches, forcing fulfillments to be processed one-by-one at much higher gas cost?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_52de602a-0419-45d7-a1b4-7efdc29e0693",
+    "timestamp": "2025-12-02 17:45:12.764452",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.setInvestmentVault() (lines 1397-1408), the function validates that investmentVault_.asset() == $.asset. However, it does not verify that the investment vault's share token is compatible or that the ShareToken is authorized. Can setting an incompatible investment vault brick the entire investment system, preventing future investAssets() or withdrawFromInvestment() calls from succeeding?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_233dc0d0-dc6e-4b69-be7c-cb6982d99453",
+    "timestamp": "2025-12-02 17:45:29.231868",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.withdrawFromInvestment() (lines 1477-1509), the actualAmount is calculated as balanceAfter - balanceBefore. If the investment vault or underlying asset has a transfer fee that wasn't present during investAssets(), can this cause actualAmount < requested amount, leading to insufficient assets for pending redemptions and permanent user fund lockup?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_79cf255a-966b-475e-92fa-80ef81d0c895",
+    "timestamp": "2025-12-02 17:45:47.280551",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.investAssets() (lines 1448-1465), shares from the investment vault are sent directly to the ShareToken ($.shareToken as receiver). If the ShareToken does not properly track these investment shares separately from user shares, can this corrupt the circulating supply calculation and enable share inflation attacks?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_7c0c73ca-297c-44f2-abfe-ede7d703fac8",
+    "timestamp": "2025-12-02 17:46:07.205352",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.withdrawFromInvestment() (lines 1477-1509), the function checks that ShareToken has self-allowance (investmentShareToken.allowance(shareToken_, shareToken_) >= minShares). If this allowance is insufficient, the function reverts with InvestmentSelfAllowanceMissing. Can an attacker front-run a legitimate withdrawal by spending the ShareToken's self-allowance on the investment share token, causing the vault to be unable to withdraw from investments and blocking all user redemptions?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_e0d3748e-59ed-49a2-a3ed-e0143ea735e4",
+    "timestamp": "2025-12-02 17:46:28.845262",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.withdrawFromInvestment() (lines 1477-1509), the function uses previewWithdraw() to estimate shares needed, then redeems minShares (capped at maxShares). If the investment vault's conversion rate has adverse slippage, can the actual assets withdrawn be significantly less than requested, breaking the reserved asset accounting and causing failed user redemptions?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_63dc3731-a04f-4d2b-b08b-f31de610c0f3",
+    "timestamp": "2025-12-02 17:46:52.591222",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.requestDeposit() (lines 341-371), assets are immediately transferred to the vault and added to totalPendingDepositAssets. If the investment manager never calls fulfillDeposit() for this controller, do these assets remain in pending state forever, effectively locked and preventing their investment, while totalAssets() correctly excludes them but they're still unusable?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_1ec69be4-0683-4ace-b1ca-1e9506594164",
+    "timestamp": "2025-12-02 17:47:16.285944",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable._convertToAssets() (lines 1204-1216), the function denormalizes assets by dividing by scalingFactor. If scalingFactor is calculated incorrectly during initialize() (line 186) for edge-case decimals, can this cause systematic over/under-conversion that accumulates across all vault operations?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_55188b6d-19d1-460e-9c07-140d7588a48a",
+    "timestamp": "2025-12-02 17:47:41.601350",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.fulfillDeposit() (lines 425-445), shares are calculated using _convertToShares(assets, Math.Rounding.Floor). If the conversion rate (circulating supply / total assets) changes dramatically between requestDeposit() and fulfillDeposit() due to investment losses, can users receive significantly fewer shares than expected, violating the async deposit invariant?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_507a51ce-a408-49e0-b588-bcc0c6960439",
+    "timestamp": "2025-12-02 17:48:08.978347",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.investAssets() (lines 1448-1465), the function checks that amount <= totalAssets() before transferring to the investment vault. Since totalAssets() excludes reserved assets (pending deposits, claimable redemptions, cancelations), can a race condition occur where assets meant for pending claims are invested, causing redeem() or claimCancelDepositRequest() to fail due to insufficient balance?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_651c8c3d-4b3e-4b4a-bf84-631bf3c11132",
+    "timestamp": "2025-12-02 17:48:36.191702",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.totalAssets() (lines 1174-1180), reserved assets are calculated as totalPendingDepositAssets + totalClaimableRedeemAssets + totalCancelDepositAssets. However, totalClaimableRedeemAssets is in asset units while totalClaimableRedeemShares tracks shares. If convertToAssets() rates change between fulfillment and claim, can this mismatch cause totalAssets() to undercount or overcount reserved amounts, enabling over-investment?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_80558bdb-39f7-47d2-bc3f-315a42fb09c2",
+    "timestamp": "2025-12-02 17:49:06.061348",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.claimCancelDepositRequest() (lines 1691-1711), assets are transferred back to the receiver after deleting claimableCancelDepositAssets[controller]. If the asset transfer fails silently (non-reverting ERC20), does the state get permanently deleted while the user receives no assets, causing permanent fund loss?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_cd8e12d4-51da-4e4e-9a53-f9cbefb2beb9",
+    "timestamp": "2025-12-02 17:49:35.957959",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.redeem() (lines 885-918), the function burns shares from the vault's balance after calculating proportional assets. If the vault's share balance is insufficient due to a prior burn or transfer, can this cause an underflow that either reverts legitimate claims or allows claiming more assets than entitled?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_cf2dfc30-aad2-46d3-a3d3-f9e02619c15f",
+    "timestamp": "2025-12-02 17:50:08.114779",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.fulfillRedeem() (lines 822-841), shares are NOT burned during fulfillment—they are held by the vault until redeem()/withdraw() is called. If a malicious controller calls cancelRedeemRequest() after fulfillRedeem() but before claiming, can they move already-fulfilled shares back to pending state and claim them twice (once as cancelation, once as redemption)?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_6716c89b-cc63-4a3b-af6b-626783e9ea22",
+    "timestamp": "2025-12-02 17:50:39.533636",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.deposit() (lines 557-589), assets are converted to shares using the stored ratio (shares.mulDiv(availableShares, availableAssets)). If the investment manager calls fulfillDeposit() twice for the same controller without the user claiming in between, does the second fulfillment overwrite or add to claimableDepositAssets, potentially allowing double-claiming of the first fulfillment's shares?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_74b66026-424d-4ca8-84b5-47b0aad4aadf",
+    "timestamp": "2025-12-02 17:51:09.883393",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.fulfillDeposit() (lines 425-445), the function mints shares to the vault and stores them in claimableDepositShares[controller]. If a user calls deposit() or mint() multiple times with the same controller before all claimable shares are consumed, can they claim more shares than were actually fulfilled due to improper state tracking between claimableDepositShares and claimableDepositAssets?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_e6015a15-de56-4415-ace8-68081237c088",
+    "timestamp": "2025-12-02 17:51:42.030312",
+    "report_generated": false
+  },
+  {
+    "question": "The conversion functions depend on getCirculatingSupplyAndAssets() which depends on all vaults' getClaimableSharesAndNormalizedAssets(). If vault A is in the middle of fulfillDeposit (incrementing claimableShares) and vault B simultaneously fulfills a large redeem (decrementing claimableAssets), could the mid-state reads in getCirculatingSupplyAndAssets() capture inconsistent values, causing temporary conversion ratio spikes that allow",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_b1564549-653e-4cf0-83e0-5f220d344dd1",
+    "timestamp": "2025-12-02 17:52:14.105416",
+    "report_generated": false
+  },
+  {
+    "question": "The initialize() function checks decimals() == 18 (line 121) which calls ERC20Upgradeable's decimals() returning a hardcoded value. If a future version of OpenZeppelin changes the decimals() function to be mutable or changes the default from 18, could previously deployed proxies fail to initialize or new deployments pass the check with wrong decimals, breaking decimal normalization?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_7f505965-4aee-4329-91d1-761d52632d7e",
+    "timestamp": "2025-12-02 17:52:47.721495",
+    "report_generated": false
+  },
+  {
+    "question": "In the constructor (lines 106-108), _disableInitializers() prevents initialization of the implementation. However, if someone deploys a proxy with an incorrect implementation address (pointing to a non-implementation contract), could initialize() be called on the wrong contract, setting up a seemingly functional but actually broken ShareToken where storage is in a different contract?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_0fe70ad7-a4b5-4608-99a4-6b217695191b",
+    "timestamp": "2025-12-02 17:53:21.885391",
+    "report_generated": false
+  },
+  {
+    "question": "The initialize() function calls __Ownable_init(owner) which sets the owner in Ownable2Step's storage. If the owner parameter is address(0) or an inaccessible address, could the ShareToken be deployed but immediately become unmanageable, unable to register vaults or set investment configurations, requiring a complete redeployment?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_0029708a-a351-4f47-93db-3d78f985d258",
+    "timestamp": "2025-12-02 17:53:54.731625",
+    "report_generated": false
+  },
+  {
+    "question": "The owner can call registerVault() and unregisterVault() at any time without timelock. If the owner's private key is compromised, could an attacker immediately unregister all vaults (if they're in the correct state), effectively DoSing the entire protocol by removing all deposit/redeem entry points, and then register malicious vaults to steal subsequent deposits?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_8b4d41de-ae27-4dfc-bdda-64f7d2a303c1",
+    "timestamp": "2025-12-02 17:54:28.494913",
+    "report_generated": false
   }
 ]
