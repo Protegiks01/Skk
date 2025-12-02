@@ -1198,5 +1198,155 @@
     "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_4de62826-b9bb-44f8-a522-44642ff8fc2a",
     "timestamp": "2025-12-02 18:40:24.125335",
     "report_generated": false
+  },
+  {
+    "question": "WERC7575ShareToken.mint() and burn() (lines 363-382) use the onlyVaults modifier (line 363, 376) which checks if _vaultToAsset[msg.sender] != address(0) (lines 200-203). However, if a vault contract is malicious or compromised, can it call mint() to mint unlimited shares as long as the recipient is KYC-verified (line 367 check)? The modifier only validates that msg.sender is a registered vault, but doesn't check if the mint amount is reasonable or if the vault has received corresponding assets. Can a malicious vault mint 1 billion shares without depositing any assets, inflating totalSupply and diluting existing shareholders?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_40212eff-e67b-450e-a74f-2b5ce3a10c0a",
+    "timestamp": "2025-12-02 18:41:32.028547",
+    "report_generated": false
+  },
+  {
+    "question": "The WERC7575ShareToken contract maintains a bidirectional mapping: _assetToVault (EnumerableMap) and _vaultToAsset (mapping) (lines 133-134). During registerVault() (lines 237-238), both mappings are set. However, during unregisterVault() (lines 281-282), the function removes from _assetToVault and deletes _vaultToAsset[vaultAddress]. Can these two mappings become desynchronized if an error occurs between line 281 and line 282? For example, if the transaction reverts after remove() succeeds but before delete, would _assetToVault no longer contain the asset, but _vaultToAsset[vault] still points to the asset? This could allow the vault to still call mint()/burn() (onlyVaults modifier checks _vaultToAsset[msg.sender] at line 201) even though the asset is unregistered.",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_74ce0216-a511-4b3e-9ce9-277e176f439f",
+    "timestamp": "2025-12-02 18:41:45.486452",
+    "report_generated": false
+  },
+  {
+    "question": "In WERC7575ShareToken.registerVault() (lines 232-234), the function enforces MAX_VAULTS_PER_SHARE_TOKEN = 10 to prevent DOS via unbounded iteration. However, can an attacker exploit this limit by registering 10 vaults for different assets, then having users deposit into all 10 vaults? If the protocol later wants to register an 11th vault, it would be blocked. Can users front-run a vault unregistration by depositing into that vault (making totalAssets() > 0), preventing unregistration (line 266 check), and keeping the slot occupied indefinitely? This would allow users to DOS new vault registrations by keeping all 10 slots filled.",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_bd6221c9-6271-43cb-bb27-3e1d194ce4aa",
+    "timestamp": "2025-12-02 18:41:59.270234",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575ShareToken.unregisterVault() (lines 256-285) validates that the vault has zero totalAssets() (line 265) and zero asset balance (line 274) before allowing unregistration. However, the function uses try-catch blocks (lines 265-271, 274-278) and reverts with a string error if either check fails. Can a malicious vault implement totalAssets() to always revert, causing the try-catch at line 265 to enter the catch block (line 267) which reverts with 'cannot verify vault has no outstanding assets'? This would permanently prevent unregistration of that vault, even if the owner wants to remove a buggy or malicious vault implementation, effectively DOS'ing vault management.",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_50790cef-65dc-48b8-8614-e0ed64d984a7",
+    "timestamp": "2025-12-02 18:42:14.586293",
+    "report_generated": false
+  },
+  {
+    "question": "In WERC7575ShareToken.registerVault() (lines 218-241), the function checks if _assetToVault.contains(asset) at line 221 and reverts with AssetAlreadyRegistered if true. However, can an attacker exploit a race condition where two registerVault() transactions for the same asset are submitted simultaneously? If both transactions read _assetToVault.contains(asset) as false before either writes, can both proceed to set() the mapping, causing the second registration to overwrite the first? This would orphan the first vault's authorization, potentially locking user funds if they had deposited into the first vault but it's no longer registered.",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_18d467a2-10c4-43ac-9093-14c5c3aa8da6",
+    "timestamp": "2025-12-02 18:42:29.989208",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575ShareToken.registerVault() (lines 218-241) validates that the vault's asset() matches the provided asset parameter (line 224) and that the vault's share() matches address(this) (lines 227-229). However, can a malicious vault contract implement asset() and share() to return correct values during registration, but then change their return values later (via upgradeable proxy or mutable storage)? After registration, if the vault's asset() no longer matches, can it exploit mint()/burn() authorization to mint shares for the wrong asset or steal funds by calling mint() with inflated amounts?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_740bf835-330b-4d72-9a91-c3c7cc78025b",
+    "timestamp": "2025-12-02 18:42:46.802004",
+    "report_generated": false
+  },
+  {
+    "question": "The _rBalanceAdjustments mapping (line 127) stores adjustments as 'mapping(address => mapping(uint256 => uint256[2]))', where uint256 is the timestamp and uint256[2] is [amounti, amountr]. Can two adjustments with the same timestamp overwrite each other? Line 1436 checks if _rBalanceAdjustments[account][ts][0] != 0, so duplicate timestamps are prevented. However, if the revenue admin cancels an adjustment (line 1512 deletes the mapping entry), can they immediately re-apply a different adjustment with the same timestamp? For example, cancel adjustrBalance(account, 100, 50, 60), then call adjustrBalance(account, 100, 50, 70) - both use ts=100. Does the cancellation properly clear the [0] index to allow re-use, or does the delete leave residual state?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_1e92ebc4-a6ce-4bdf-b52f-5416103de9e8",
+    "timestamp": "2025-12-02 18:43:04.754234",
+    "report_generated": false
+  },
+  {
+    "question": "In WERC7575ShareToken.adjustrBalance() (lines 1442-1447), the function validates that amountr <= amounti * MAX_RETURN_MULTIPLIER (where MAX_RETURN_MULTIPLIER = 2, line 114). This caps investment returns at 100% profit. However, the check at line 1442 is 'if (amounti > type(uint256).max / MAX_RETURN_MULTIPLIER)', which reverts to prevent overflow in the multiplication at line 1445. Can an attacker exploit this by front-running the revenue admin's adjustrBalance() call with a transaction that manipulates amounti to be exactly type(uint256).max / 2 + 1, causing line 1442 to revert? This would DOS the revenue admin's ability to record returns for that account, freezing accounting updates.",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_0ad08c09-a2ef-4929-813a-2a66c034beb4",
+    "timestamp": "2025-12-02 18:43:25.189839",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575ShareToken.cancelrBalanceAdjustment() (lines 1485-1514) reverses a previous adjustrBalance() by applying the opposite adjustment. At lines 1494-1504, if amountr > amounti (original was profit), the cancellation decreases _rBalances. However, line 1497 checks if currentRBalance < difference and reverts with RBalanceAdjustmentTooLarge. Can an attacker exploit this by deliberately draining their rBalance through rBatchTransfers() (receiving net credits that decrease rBalance) after an adjustrBalance() profit adjustment, making it impossible for the revenue admin to cancel the adjustment? This would permanently lock incorrect accounting data in _rBalanceAdjustments[account][ts], preventing corrections.",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_13736f98-26d1-449f-977e-cbbd06d9b002",
+    "timestamp": "2025-12-02 18:43:47.387189",
+    "report_generated": false
+  },
+  {
+    "question": "In WERC7575ShareToken.adjustrBalance() (lines 1456-1468), when amountr < amounti (loss), the function checks if currentRBalance < difference at line 1459 and reverts with RBalanceAdjustmentTooLarge if true. However, the comment at lines 1460-1462 says 'Should not happen otherwise we can't cancel with cancelrBalanceAdjustment'. Can an attacker exploit a scenario where they cause currentRBalance to become insufficient through other operations (like rBatchTransfers() crediting the account, which decreases rBalance at lines 1166-1178), and then the revenue admin's legitimate adjustrBalance() call reverts? This would DOS the revenue admin's ability to record investment losses for that account, breaking the accounting system.",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_5b7396ea-3d55-4d1d-9cfc-9fc61b6e2d30",
+    "timestamp": "2025-12-02 18:44:11.423190",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575ShareToken.adjustrBalance() (lines 1435-1471) uses unchecked arithmetic when increasing _rBalances at line 1454: '_rBalances[account] += difference'. Can this unchecked addition cause uint256 overflow if the revenue admin calls adjustrBalance() with very large amountr values? For example, if _rBalances[account] = uint256.max - 100 and the admin calls adjustrBalance() with amountr - amounti = 200, does the overflow wrap _rBalances[account] to 99, effectively zeroing the user's restricted balance? This would allow the user to transfer tokens that should be restricted, violating the rBalance tracking invariant.",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_52ce924b-dce2-47a7-ad4e-9c49c3d0418c",
+    "timestamp": "2025-12-02 18:44:36.035956",
+    "report_generated": false
+  },
+  {
+    "question": "In WERC7575ShareToken.adjustrBalance() (lines 1435-1471), when amountr > amounti (profit), the function increases _rBalances by (amountr - amounti) at lines 1453-1455 using unchecked arithmetic. Can an attacker (if they compromise the revenue admin key) exploit this by calling adjustrBalance() multiple times with the same timestamp, causing _rBalances to increase repeatedly? Wait, line 1436 checks if _rBalanceAdjustments[account][ts][0] != 0 and reverts with RBalanceAdjustmentAlreadyApplied, so duplicate timestamps are prevented. However, can the attacker use different timestamps (ts1, ts2, ts3, ...) to repeatedly increase _rBalances without bound? Each call with a unique timestamp would bypass the duplicate check, allowing unlimited rBalance inflation.",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_fa1956c5-a371-4c06-ae53-dc22526698c0",
+    "timestamp": "2025-12-02 18:45:00.464185",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575ShareToken.setKycVerified() (lines 294-302) allows the KYC admin to set isKycVerified[controller] to true or false. The function only emits an event if the status actually changes (lines 298-301). Can a malicious user exploit the gap between losing KYC status and having their tokens frozen by front-running the setKycVerified(user, false) transaction? For example, if the user observes the setKycVerified tx in the mempool, can they quickly call transfer() to move all their tokens to another address (that they control and is KYC-verified) before the KYC revocation takes effect? Once the tokens are at the new address, the original address being non-KYC doesn't matter, effectively bypassing KYC enforcement.",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_140b5760-27b1-4220-a447-97532afe9771",
+    "timestamp": "2025-12-02 18:45:26.440543",
+    "report_generated": false
+  },
+  {
+    "question": "In WERC7575ShareToken.mint() (lines 363-369), the function checks isKycVerified[to] at line 367 before minting. However, burn() (lines 376-382) also checks isKycVerified[from] at line 380. Can a vault exploit a scenario where a user was KYC-verified when they deposited (mint() succeeded), but later their KYC status is revoked (setKycVerified(user, false)), and now burn() will always revert because of the KYC check? This would trap the user's funds: they can't withdraw (burn reverts due to KYC), and they can't transfer (transfer requires KYC). Is this intended behavior, or does it violate the invariant that users should always be able to exit their position?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_521f9ca1-2165-4baa-bf4c-eedcb31ea33b",
+    "timestamp": "2025-12-02 18:45:53.476761",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575ShareToken.rBatchTransfers() (lines 1119-1202) similarly updates _balances for net creditors (lines 1155-1180) without checking isKycVerified. In the consolidation phase (lines 1123), accounts are aggregated, and in the balance update phase (lines 1129-1187), if account.credit > account.debit, the account receives a net credit (line 1162). If this account belongs to a non-KYC user, can the validator exploit rBatchTransfers() to transfer tokens to non-KYC addresses by including them as creditors? The function never calls isKycVerified[account.owner] before increasing _balances[account.owner] at line 1162.",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_9c1481fb-c706-41c1-9cc8-d22890c80fd0",
+    "timestamp": "2025-12-02 18:46:22.130550",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575ShareToken.batchTransfers() (lines 700-734) updates _balances directly without checking isKycVerified for any of the creditors. The function emits Transfer events (line 727) but never validates that creditors[i] is KYC-verified before increasing _balances[creditors[i]] (line 716). Can a malicious validator exploit this by including non-KYC addresses as creditors in a batch transfer, bypassing the KYC enforcement that exists in transfer() and transferFrom()? This would violate the invariant that 'Only isKycVerified[recipient] == true can receive/hold shares', allowing non-KYC users to hold tokens through batch operations.",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_7649b9ce-0ec7-4d5f-bb24-58ae89829a87",
+    "timestamp": "2025-12-02 18:46:50.661757",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575ShareToken.transfer() (lines 472-477) checks isKycVerified[to] at line 474 before allowing the transfer. However, mint() (lines 363-369) also checks isKycVerified[to] at line 367. Can an attacker exploit a race condition where they call transfer() to a recipient who is currently KYC-verified, but the KYC admin calls setKycVerified(recipient, false) in the same block before transfer() executes? If the transactions are ordered such that the KYC revocation happens first, does transfer() correctly revert, or is there a TOCTOU (Time-Of-Check-Time-Of-Use) vulnerability where the KYC status changes between the check and the actual balance update?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_fa8c65a1-8a0f-4c85-9172-9526f75666de",
+    "timestamp": "2025-12-02 18:47:20.034900",
+    "report_generated": false
+  },
+  {
+    "question": "The dual allowance model requires both allowance[from][from] (self-allowance) and allowance[from][msg.sender] (caller allowance) for transferFrom() (lines 488-492). However, the comment at line 486 says 'Always spends from self-allowance regardless of caller'. Can an attacker exploit confusion around this comment by calling transferFrom() where they are NOT the owner, but the owner has granted them regular allowance? For example, if Alice grants Bob allowance[Alice][Bob] = 100 but Alice has no self-allowance, can Bob call transferFrom(Alice, Charlie, 50)? Line 490 would try to spend allowance[Alice][Alice] which is 0, causing revert. Is this the intended behavior, or can Bob bypass this by first calling permit() on Alice's behalf (if Bob has a validator signature) to grant Alice self-allowance, then using his regular allowance?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_86ee4432-ece8-4937-bc85-128ab89b3c33",
+    "timestamp": "2025-12-02 18:47:52.046069",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575ShareToken.transferFrom() (lines 488-492) calls super.transferFrom(from, to, value) after the self-allowance check. OpenZeppelin's ERC20.transferFrom() internally calls _spendAllowance(from, msg.sender, value). However, if msg.sender == from (user calling transferFrom on their own tokens), does OpenZeppelin's _spendAllowance() correctly handle the case where it tries to spend allowance[from][from] twice (once at line 490 explicitly, once inside super.transferFrom())? Can this double-spending of the same allowance mapping cause underflow or incorrect allowance tracking, allowing a user to transfer more than their self-allowance permits?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_5702f773-6973-4d7c-b0d0-227ececf83cf",
+    "timestamp": "2025-12-02 18:48:22.475069",
+    "report_generated": false
+  },
+  {
+    "question": "In WERC7575ShareToken.approve() (lines 439-444), the function blocks self-approval by checking if msg.sender == spender and reverting (lines 440-443). The comment says 'use permit instead for self-spending'. However, can an attacker who compromises a user's account but not the validator key exploit this by first calling permit() with owner != spender to grant themselves regular allowance, then calling transferFrom() which would normally require self-allowance but the attacker has bypassed the self-allowance requirement? Wait, transferFrom() still calls _spendAllowance(from, from, value), so self-allowance is still needed. Can the attacker exploit the fact that they can't directly approve(self, self) but can use permit() with validator signature to grant self-allowance, potentially bypassing user consent if the validator is compromised?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_d227bc35-6082-4bcf-aa3e-592d7a532f3e",
+    "timestamp": "2025-12-02 18:48:53.086125",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575ShareToken.transferFrom() (lines 488-492) requires both self-allowance and caller allowance by calling _spendAllowance(from, from, value) (line 490) and then super.transferFrom(from, to, value) which internally calls _spendAllowance(from, msg.sender, value). However, the self-allowance check happens BEFORE the KYC check (line 489). Can an attacker exploit this ordering by repeatedly calling transferFrom() with a non-KYC recipient, causing the self-allowance to be decremented (line 490 consumes it) even though the transaction reverts at line 489? This would allow an attacker to drain someone's self-allowance without actually transferring tokens, effectively DOS'ing their ability to transfer in the future.",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_3f837a53-c304-411d-b77d-13d8e6372133",
+    "timestamp": "2025-12-02 18:49:22.271764",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575ShareToken.transfer() (lines 472-477) calls _spendAllowance(from, from, value) (line 475) to enforce self-allowance requirement before calling super.transfer(). However, _spendAllowance() is inherited from OpenZeppelin's ERC20, which checks allowance[from][from] and decrements it. Can an attacker exploit the case where a user has self-allowance = 100 and attempts to transfer 50 twice? The first transfer consumes 50 from self-allowance (leaving 50), but does the second transfer correctly fail if the user only has 40 self-allowance remaining? Specifically, if _spendAllowance() has any edge cases around allowance underflow or incorrect decrementing, can this be used to bypass the dual authorization invariant?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_99a37b8c-1ca6-4b36-b9f4-46a25b968dcc",
+    "timestamp": "2025-12-02 18:49:52.241756",
+    "report_generated": false
+  },
+  {
+    "question": "The WERC7575ShareToken.permit() function (lines 396-429) uses inline assembly to construct the EIP-712 structHash (lines 405-414). The assembly block manually places permitTypehash, owner, spender, value, nonce, and deadline into memory and hashes them. Can an attacker exploit any memory layout vulnerabilities in this assembly code? Specifically, lines 408-411 use mstore with offsets 0x20, 0x40, 0x60, 0x80, 0xa0. If freeMemPtr (line 406) is manipulated or if there's an off-by-one error in the offsets, could this cause the hash to include wrong values or allow signature malleability attacks where different (owner, spender, value) combinations produce the same hash?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_4d3d3142-513d-466d-a014-cb077913c75b",
+    "timestamp": "2025-12-02 18:50:20.431052",
+    "report_generated": false
+  },
+  {
+    "question": "In WERC7575ShareToken.permit() (lines 419-422), when owner == spender, the code checks if signer != _validator and reverts. However, line 424 then checks if signer != owner for the non-self-approval case. Can an attacker exploit a race condition where they first call permit() with owner != spender (passing owner signature validation), and then immediately call permit() again with owner == spender (passing validator validation) to grant both regular allowance and self-allowance in separate transactions? While each individual permit() call is valid, can the sequence be exploited to bypass intended authorization flows, especially if there's a logical dependency between regular and self-allowances?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_f2482a4c-0901-4b54-ae77-abfb379287ff",
+    "timestamp": "2025-12-02 18:50:49.117118",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575ShareToken.permit() (lines 396-429) checks if block.timestamp > deadline and reverts with ERC2612ExpiredSignature (lines 397-399). However, the deadline parameter is part of the EIP-712 signature hash (line 411). Can an attacker front-run a legitimate permit() transaction by observing the mempool, extracting the signature parameters (v, r, s, deadline), and submitting their own permit() call with the exact same parameters but a different value (line 410)? While the signature is for a specific value, if the attacker submits with value=0 or a different value, does the signature validation at line 417 correctly reject it, or is there an edge case where partial signature components can be reused?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_f13e9c97-671e-45c8-94db-1b58433328dd",
+    "timestamp": "2025-12-02 18:51:15.610866",
+    "report_generated": false
   }
 ]
