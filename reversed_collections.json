@@ -898,5 +898,155 @@
     "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_d1d47216-4540-4cab-8e3e-a8a2fdbb4717",
     "timestamp": "2025-12-02 18:16:31.970438",
     "report_generated": false
+  },
+  {
+    "question": "In getCirculatingSupplyAndAssets() (lines 374-381), the function iterates through all vaults calling IERC7575Vault(vaultAddress).getClaimableSharesAndNormalizedAssets(). If one vault returns extremely large values (e.g., type(uint256).max - 1) due to a bug, could the addition totalClaimableShares += vaultClaimableShares (line 379) or totalNormalizedAssets += vaultNormalizedAssets (line 380) overflow, causing the entire conversion system to break?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a22f6aaf-41e2-4669-bd56-f008d3f907b0",
+    "timestamp": "2025-12-02 18:17:45.789997",
+    "report_generated": false
+  },
+  {
+    "question": "The conversion functions use Math.mulDiv() with a rounding parameter. If convertNormalizedAssetsToShares() uses Math.Rounding.Floor for deposits (favoring the protocol) but convertSharesToNormalizedAssets() uses Math.Rounding.Ceil for withdrawals (favoring users), could repeated deposit-withdraw cycles allow users to extract value through rounding in their favor, slowly draining the protocol?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_3795db07-0213-43f8-adbc-65c62a005dac",
+    "timestamp": "2025-12-02 18:17:59.212127",
+    "report_generated": false
+  },
+  {
+    "question": "In getCirculatingSupplyAndAssets() (line 389), the function calculates circulatingSupply as supply - totalClaimableShares, with a ternary to return 0 if totalClaimableShares > supply. If through accounting bugs, totalClaimableShares is exactly equal to supply, circulatingSupply becomes 0. Could this cause convertNormalizedAssetsToShares() to divide by (0 + VIRTUAL_SHARES), giving incorrect conversion ratios that allow users to mint shares for free or get stuck unable to mint?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_be7266ec-0348-484e-8e2a-2a6116ddae34",
+    "timestamp": "2025-12-02 18:18:13.512807",
+    "report_generated": false
+  },
+  {
+    "question": "The VIRTUAL_SHARES and VIRTUAL_ASSETS constants are set to 1e6 (lines 77-78). If the actual circulatingSupply grows to 1e24 or larger, the virtual amounts become negligible (1e6 / 1e24 = 1e-18). At this scale, could the virtual amount protection against inflation attacks become ineffective, allowing an attacker to manipulate the first deposit after total supply reaches zero through mass redemptions?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_604e14b5-9f2c-41ac-bc92-1b3d59618122",
+    "timestamp": "2025-12-02 18:18:27.557461",
+    "report_generated": false
+  },
+  {
+    "question": "In convertSharesToNormalizedAssets() (lines 727-737), if totalNormalizedAssets is manipulated to be much larger than circulatingSupply, the conversion would give users more assets per share than fair value. Could an attacker donate large amounts of assets to investment vaults (which get counted in totalNormalizedAssets via _calculateInvestmentAssets()) to inflate the conversion ratio, then immediately redeem their shares for more assets than they deposited?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_fb6ace4d-a331-4ff8-8a6b-9ffd1c33b9f6",
+    "timestamp": "2025-12-02 18:18:42.776818",
+    "report_generated": false
+  },
+  {
+    "question": "The convertNormalizedAssetsToShares() function calls this.getCirculatingSupplyAndAssets() via external call (line 703). If there's a reentrancy vulnerability in any of the vaults iterated in getCirculatingSupplyAndAssets(), could an attacker reenter and manipulate the totalNormalizedAssets value mid-calculation, affecting the conversion ratio to their advantage?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_9d7c03fb-6f9f-4178-82e4-9a346e6ecdeb",
+    "timestamp": "2025-12-02 18:18:59.109069",
+    "report_generated": false
+  },
+  {
+    "question": "In convertNormalizedAssetsToShares() (lines 701-711), the function adds VIRTUAL_SHARES (1e6) and VIRTUAL_ASSETS (1e6) to prevent inflation attacks. However, if circulatingSupply is calculated as zero (line 703) due to all shares being held by vaults for redemptions, the final calculation becomes Math.mulDiv(normalizedAssets, 1e6, 1e6, rounding), which equals normalizedAssets. Could an attacker exploit this edge case by depositing when circulatingSupply is zero to receive 1:1 shares regardless of actual asset value, bypassing the intended conversion logic?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_2c35873c-f33f-42a4-8318-72f93add0097",
+    "timestamp": "2025-12-02 18:19:17.067038",
+    "report_generated": false
+  },
+  {
+    "question": "The getInvestedAssets() function (lines 626-628) returns the total of balanceOf + rBalanceOf for this ShareToken's holdings in the investment ShareToken. If the investment layer has multiple ShareTokens with cross-investments (circular dependencies), could this create infinite recursion or double-counting when calculating total assets, inflating the apparent value of the system?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_5aea2e70-c05f-4c8c-a1b2-273f2087c40c",
+    "timestamp": "2025-12-02 18:19:37.068921",
+    "report_generated": false
+  },
+  {
+    "question": "In registerVault() (lines 227-232), if the investment manager is already configured, it's automatically set for new vaults. However, the function calls ERC7575VaultUpgradeable(vaultAddress).setInvestmentManager() without checking if the vault is properly initialized. Could this revert if the vault's initialization is not complete, causing vault registration to fail unexpectedly?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_09c302ae-37aa-42f4-b3f3-491bcd5a9e29",
+    "timestamp": "2025-12-02 18:19:59.366240",
+    "report_generated": false
+  },
+  {
+    "question": "The setInvestmentManager() function doesn't validate that newInvestmentManager is a contract address or has any specific interface. If the owner accidentally sets an EOA or a contract without investment management capabilities as the investment manager, could this break all investment operations across all vaults until the owner realizes the mistake and sets a correct manager?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_93f48c0e-b17e-45ca-b9cd-8bfe1f9b995c",
+    "timestamp": "2025-12-02 18:20:21.485970",
+    "report_generated": false
+  },
+  {
+    "question": "In setInvestmentManager() (lines 659-676), the function propagates the investment manager to all registered vaults (lines 667-673). If one vault's setInvestmentManager() call reverts due to access control or validation errors, could this cause partial propagation where some vaults have the new manager while others still have the old one, leading to investment coordination failures?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_2ba5b758-40d2-4b2b-8609-dff8159afde9",
+    "timestamp": "2025-12-02 18:20:46.119013",
+    "report_generated": false
+  },
+  {
+    "question": "The _calculateInvestmentAssets() function (lines 603-620) uses a try-catch block for rBalanceOf() (lines 615-619). If the investment ShareToken intentionally implements rBalanceOf() to revert under certain conditions (e.g., when circuit breakers are active), could this cause silent underreporting of invested assets, leading to incorrect conversion ratios that disadvantage late withdrawers?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_2af960ba-4ec7-4a60-833b-35901bfad92d",
+    "timestamp": "2025-12-02 18:21:14.175927",
+    "report_generated": false
+  },
+  {
+    "question": "In getCirculatingSupplyAndAssets() (lines 369-390), the function calls _calculateInvestmentAssets() (line 384) which returns totalInvestmentAssets including both balanceOf() and rBalanceOf() of the investment ShareToken. If the investment ShareToken's balanceOf() or rBalanceOf() functions have reentrancy vulnerabilities, could an attacker manipulate these values mid-call to inflate totalNormalizedAssets, affecting conversion ratios and allowing value extraction?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_affc34e0-aa5c-4490-ad1d-d95b6c55c739",
+    "timestamp": "2025-12-02 18:21:42.405904",
+    "report_generated": false
+  },
+  {
+    "question": "The _configureVaultInvestmentSettings() function approves type(uint256).max (line 549) to the vault on the investment ShareToken. If the same vault is registered, unregistered, then re-registered with a different configuration, could the unlimited approval persist across registration cycles, allowing the vault to access investment funds even after unregistration?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_616d7a88-7a9c-44c7-ab27-3ba293d67d1a",
+    "timestamp": "2025-12-02 18:22:12.471559",
+    "report_generated": false
+  },
+  {
+    "question": "In _configureVaultInvestmentSettings() (lines 540-551), the function queries IERC7575ShareExtended(investmentShareToken).vault(asset) to find the matching investment vault. If the investmentShareToken contract's vault() function returns a non-zero address for an asset that shouldn't have an investment vault, could this cause unwanted investment configuration where vaults invest into incorrect or unauthorized investment vaults?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_ff9b1230-6dd6-486d-90d1-3844f88414c2",
+    "timestamp": "2025-12-02 18:22:43.012911",
+    "report_generated": false
+  },
+  {
+    "question": "The setInvestmentShareToken() function iterates through all registered vaults (lines 580-584) and calls _configureVaultInvestmentSettings(). If one of the vaults in the middle of the iteration has a malicious asset() function that reverts, could this cause the entire setInvestmentShareToken() transaction to revert, leaving some vaults configured while others are not, creating an inconsistent investment state?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_616607ca-ba78-43b6-a081-62a98313eb28",
+    "timestamp": "2025-12-02 18:23:15.340366",
+    "report_generated": false
+  },
+  {
+    "question": "In setInvestmentShareToken() (lines 569-587), the function requires $.investmentShareToken == address(0) (lines 572-574), meaning it can only be set once. If the initial investment ShareToken is set to a malicious or buggy contract, could the protocol be permanently stuck with that contract since there's no way to update it, potentially losing all invested funds if the malicious contract refuses to return assets?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_20c3ae8c-3318-4426-bdc7-5ec20be8845a",
+    "timestamp": "2025-12-02 18:23:48.298936",
+    "report_generated": false
+  },
+  {
+    "question": "The setOperatorFor() function (line 525) is onlyVaults but doesn't emit an event indicating which vault made the call. If multiple vaults attempt to set operators for the same controller-operator pair with conflicting approved values, could the last call silently override previous settings without any record of which vault initiated the change, causing confusion about operator permissions?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_7bd99829-8a6f-4f51-8293-52dba731e0c2",
+    "timestamp": "2025-12-02 18:24:21.485275",
+    "report_generated": false
+  },
+  {
+    "question": "In setOperator(), the OperatorSet event is emitted (line 484) but there's no mechanism to query historical operator approvals. If an operator was approved, performed malicious actions, then was revoked, could there be a lack of audit trail to prove the operator's authorization at the time of the malicious action, complicating dispute resolution?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a96d1d95-f22a-4da4-94a5-d5ff2a441e33",
+    "timestamp": "2025-12-02 18:24:54.208384",
+    "report_generated": false
+  },
+  {
+    "question": "The operator system uses a single mapping $.operators[controller][operator] that applies across ALL vaults in the multi-asset system (lines 89, 483). If a user wants to approve an operator for vault A (USDC) but not vault B (USDT), is this granularity impossible? Could a malicious operator approved for one asset drain shares from all other assets since the approval is centralized at the ShareToken level?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_3a074f5f-ffb0-45c4-8bcb-d617bb349f18",
+    "timestamp": "2025-12-02 18:25:27.996461",
+    "report_generated": false
+  },
+  {
+    "question": "In setOperatorFor() (lines 525-530), vaults can set operators on behalf of users with the onlyVaults modifier. If a malicious or compromised vault calls setOperatorFor(userA, maliciousOperator, true), could this grant unauthorized operator permissions without the user's knowledge, allowing the malicious operator to submit redeem requests and steal user shares?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_3c1bbc1c-1bd6-4be1-8ab3-34e89ceb1db2",
+    "timestamp": "2025-12-02 18:26:00.930519",
+    "report_generated": false
+  },
+  {
+    "question": "The isOperator() function (lines 502-505) simply returns $.operators[controller][operator] without any time-based expiry or revocation checks. If a user approves an operator, then that operator's private key is compromised, could the attacker continue to operate on behalf of the user indefinitely until the user explicitly calls setOperator(operator, false), potentially losing all funds before they realize the compromise?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_2660ee45-10ef-4d37-abd5-3daa3c810bf7",
+    "timestamp": "2025-12-02 18:26:34.570477",
+    "report_generated": false
+  },
+  {
+    "question": "In setOperator() (lines 480-486), the function checks if msg.sender == operator and reverts with CannotSetSelfAsOperator (line 481). However, the function then sets $.operators[msg.sender][operator] = approved without any additional validation. If a user calls setOperator(maliciousAddress, true) and later that malicious operator calls requestRedeem() on their behalf in a vault, could the operator drain all user shares since there's no per-vault or per-action operator permission granularity?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_ec60919f-1754-4015-99f6-6d05c1470925",
+    "timestamp": "2025-12-02 18:27:06.163964",
+    "report_generated": false
+  },
+  {
+    "question": "In registerVault(), the function stores both $.assetToVault[asset] = vault and $.vaultToAsset[vault] = asset (lines 215-218). If there's a reentrancy vulnerability in the external calls to vault.asset() or vault.share() (lines 200, 203), could an attacker manipulate these mappings mid-registration to create a many-to-one or one-to-many mapping, violating the bijection invariant?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_2fcfc70a-e30c-4c40-ac6d-209bf7ec5eaa",
+    "timestamp": "2025-12-02 18:27:38.161886",
+    "report_generated": false
+  },
+  {
+    "question": "The isVault() function (lines 337-340) checks if vaultToAsset[vaultAddress] != address(0). If an attacker deploys a contract at an address that collides with a previously registered and unregistered vault address (through CREATE2 manipulation across chains or after selfdestruct), could this function return false for a currently active vault or true for an unregistered vault, breaking authorization checks?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_0357866d-002b-48c7-8638-153ff70436d3",
+    "timestamp": "2025-12-02 18:28:09.092989",
+    "report_generated": false
   }
 ]
