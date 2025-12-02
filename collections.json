@@ -148,5 +148,155 @@
     "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_b2bdbf45-7162-43be-bdc8-c85c1439c30d",
     "timestamp": "2025-12-02 17:18:52.153560",
     "report_generated": false
+  },
+  {
+    "question": "ShareTokenUpgradeable implements an operator approval system where controllers can approve operators to act on their behalf (setOperator). If the operator approval is not scoped per vault (i.e., approving operator for vault A also grants operator permissions for vault B), can a malicious operator drain a controller's positions across all vaults once approved for a single vault?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_4f1a88d0-304c-46c7-be57-1f1292f0db45",
+    "timestamp": "2025-12-02 17:21:40.844188",
+    "report_generated": false
+  },
+  {
+    "question": "In ShareTokenUpgradeable, if setOperator(operator, approved) does not emit an event, and the operator status is later used in access control checks for sensitive operations (e.g., fulfillDeposit, investAssets), can an attacker who previously gained operator approval (then had it revoked off-chain) exploit a front-running scenario where they execute a privileged operation before the revocation transaction confirms?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_28307fb4-c25f-435e-99d9-a6283f7ca9bd",
+    "timestamp": "2025-12-02 17:21:54.081438",
+    "report_generated": false
+  },
+  {
+    "question": "ERC7575VaultUpgradeable._calculateReservedAssets() sums totalPendingDeposit, totalClaimableDeposit, and totalPendingRedeem (line ~1085). However, totalPendingDeposit is denominated in asset units (e.g., 1,000,000 USDC = 1e6), while totalClaimableDeposit and totalPendingRedeem are denominated in share units (e.g., 1e18). If the function adds these values directly without converting shares to assets using convertToAssets(), does the unit mixing cause reserved assets to be massively overestimated for low-decimal assets (USDC 6 decimals) or underestimated for 18-decimal assets (DAI), leading to over-investment and potential insolvency?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_3becb786-e2f8-4055-bbb4-a9d7ff714aef",
+    "timestamp": "2025-12-02 17:22:08.625573",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable._calculateReservedAssets(), if totalClaimableDeposit is large (e.g., 1000e18 shares representing 1000 USDC), and the function incorrectly adds it as '1000e18' assets instead of converting to '1000e6' assets, the reserved calculation becomes 1 trillion times larger than actual.  If investAssets() relies on this calculation to determine available assets (totalAssets - reserved), does this permanently prevent any investment since reserved > totalAssets, locking idle capital?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a1888f98-a001-42eb-9d8c-19ec1232ead0",
+    "timestamp": "2025-12-02 17:22:22.744811",
+    "report_generated": false
+  },
+  {
+    "question": "ERC7575VaultUpgradeable. investAssets() calculates available assets as totalAssets() - _calculateReservedAssets() - investedAssets() (line ~1120). If _calculateReservedAssets() underestimates due to unit mixing (e.g., treating 1e18 shares as 1e18 assets when it should be 1e6 assets for USDC), can the Investment Manager inadvertently invest pending/claimable assets that should be reserved, causing deposit claims to revert when users try to claim their shares since the vault has insufficient assets?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_ffdec3a4-58c9-4f01-bd93-1a93b00eecdb",
+    "timestamp": "2025-12-02 17:22:38.147270",
+    "report_generated": false
+  },
+  {
+    "question": "ERC7575VaultUpgradeable. fulfillDeposit() transitions pending deposit requests to claimable by decrementing totalPendingDeposit and incrementing totalClaimableDeposit (lines ~352-358). If the Investment Manager calls fulfillDeposit() for the same controller twice (due to off-chain bug or replay), does the function's lack of idempotency protection allow totalClaimableDeposit to be incremented twice while totalPendingDeposit is only decremented once (if it underflows to zero on second call), violating the async state invariant?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_4a292950-01d6-43c6-a97c-a8ed0d6942e8",
+    "timestamp": "2025-12-02 17:22:54.565063",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.deposit(), the function checks claimableDepositRequest[controller] >= shares and decrements it (line ~405). If the controller has exactly 'shares' claimable but the function uses '>' instead of '>=' in the require check, can the controller never claim their final wei of shares, permanently locking a small amount of value?  Conversely, if the check is '>=' but the decrement uses unchecked arithmetic, can claimableDepositRequest underflow if shares > claimableDepositRequest due to a prior partial claim?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_c69e936f-fcdb-4dd2-9ab4-777612f7ef2e",
+    "timestamp": "2025-12-02 17:23:11.796072",
+    "report_generated": false
+  },
+  {
+    "question": "ERC7575VaultUpgradeable.cancelDepositRequest() allows a controller to cancel their pending deposit and reclaim assets (line ~480). If the controller calls cancelDepositRequest() and simultaneously (via another transaction) the Investment Manager calls fulfillDeposit() for the same controller, does the lack of atomicity allow a race condition where the pending request is both fulfilled (assets converted to claimable shares) and canceled (assets returned to controller), causing the controller to receive assets twice and the vault to lose funds?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_31b4946f-e729-48ef-9206-2636559681d2",
+    "timestamp": "2025-12-02 17:23:31.556915",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.fulfillRedeem(), the function mints shares to the vault as an intermediate step before burning them (line ~560). If the ShareToken's mint() function has a reentrancy hook (e.g., calling back into the vault), can an attacker exploit this to re-enter fulfillRedeem() and double-decrement totalPendingRedeem, causing the vault to release more assets than corresponding shares were burned, violating solvency? ",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_4a43b8b3-2c88-49be-bc85-8c5f46f5438f",
+    "timestamp": "2025-12-02 17:23:53.186546",
+    "report_generated": false
+  },
+  {
+    "question": "ERC7575VaultUpgradeable.convertToShares() multiplies assets by offset (10^(18 - decimals)) to normalize to 18-decimal shares (line ~1230). For USDC (6 decimals), offset = 1e12.  If an attacker deposits type(uint256).max / 1e12 USDC (approximately 1e65 USDC), does the multiplication assets * offset overflow in unchecked arithmetic, wrapping to a small number and minting far fewer shares than deserved, allowing the attacker to later redeem those shares for the full deposit amount and drain the vault?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_09134a86-f204-404a-89ca-960dc962f035",
+    "timestamp": "2025-12-02 17:24:16.303053",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.convertToAssets(), the function divides shares by offset (line ~1245). If offset is calculated incorrectly (e.g., using decimals from a different asset due to misconfiguration), can the conversion return assets with wrong magnitude?  For example, if USDC vault incorrectly uses DAI's decimals (18), offset = 1, and 1e18 shares converts to 1e18 assets instead of 1e6 USDC, causing massive over-redemption? ",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_b97f056f-08df-4117-8373-adec8e04aec7",
+    "timestamp": "2025-12-02 17:24:40.357946",
+    "report_generated": false
+  },
+  {
+    "question": "ERC7575VaultUpgradeable calculates offset in the initializer as 10 ** (18 - assetDecimals) (line ~1150). If assetDecimals > 18 (e.g., a token with 24 decimals, though rare), does the exponent become negative, causing 10 ** (18 - 24) = 10 ** (-6) to revert or compute incorrectly in Solidity, preventing vault initialization for high-decimal assets?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_c612ca88-3214-4072-b10e-231f2dd5e760",
+    "timestamp": "2025-12-02 17:25:05.706781",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable, if the asset token's decimals() function is malicious and returns a value > 77 (since 10^(18-decimals) would overflow uint256 if decimals < -59, but more realistically if decimals is manipulated), can the offset calculation in the initializer cause an integer overflow, setting offset to 0 or a wrapped value, breaking all share conversions and preventing deposits/withdrawals?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_38c41b6c-55a2-4b87-a4f6-60f03d3ddad9",
+    "timestamp": "2025-12-02 17:25:31.169381",
+    "report_generated": false
+  },
+  {
+    "question": "ERC7575VaultUpgradeable.investAssets() calls investmentVault.deposit(assets, investmentShareToken) to invest idle assets (line ~705). If the investmentVault is a malicious contract deployed by an attacker (but Owner is TRUSTED and would not register a malicious vault), it could transfer assets to itself but not mint investment shares, causing the vault to lose tracking of invested capital. However, since Owner is trusted, the real risk is: if the external investment vault has a reentrancy vulnerability, can it call back into the vault during deposit and trigger a state corruption (e.g., double-incrementing investedAssets)?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_8beabb5c-7de7-493c-9078-b2cf88e895c3",
+    "timestamp": "2025-12-02 17:25:56.424790",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.withdrawFromInvestment(), the function redeems investment shares to retrieve assets (line ~780). If the investment vault's redeem() function returns fewer assets than expected (e.g., due to loss or slippage), but withdrawFromInvestment() does not validate that returnedAssets >= expectedAssets (based on shares redeemed), can the vault's accounting become inconsistent where investedAssets decrements by the intended amount but the actual asset balance increases by less, causing future insolvency?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_0878c80b-3071-4d12-abf8-b6030c5ef36b",
+    "timestamp": "2025-12-02 17:26:23.526019",
+    "report_generated": false
+  },
+  {
+    "question": "ERC7575VaultUpgradeable.investAssets() checks available = totalAssets - reserved - investedAssets and requires assets <= available (line ~700). If investedAssets() returns a cached value (e.g., stored in storage) rather than querying the investment vault's actual share balance, and the investment vault has suffered a loss (investment shares now worth less than originally deposited), does the vault's accounting overestimate investedAssets, allowing investAssets() to invest more than truly available and reserve insufficient assets for pending claims?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_778c3939-d095-47e0-8958-60419c9e1a60",
+    "timestamp": "2025-12-02 17:26:52.053958",
+    "report_generated": false
+  },
+  {
+    "question": "ERC7575VaultUpgradeable inherits UUPSUpgradeable and restricts _authorizeUpgrade to onlyOwner.  If a malicious implementation is deployed with a storage layout that moves the 'asset' address field (currently at VaultStorage.asset, line ~98) to a different slot, does the upgrade immediately corrupt the asset address, causing subsequent deposit() calls to transfer tokens to/from the wrong asset, leading to fund loss?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_0c83fe02-1945-44d3-a930-af517d09ba7a",
+    "timestamp": "2025-12-02 17:27:21.252187",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable, the VaultStorage struct includes a __gap array for future expansion (if present). If a future upgrade adds 10 new storage variables but removes the __gap or reduces its size by less than 10 slots, does the new storage layout shift existing variables (e.g., controllerToRequest mapping) to different slots, corrupting all pending/claimable request data and preventing users from claiming their deposits/redeems?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_7f4be8ef-fd24-4726-91bd-ababdeeca1de",
+    "timestamp": "2025-12-02 17:27:49.236557",
+    "report_generated": false
+  },
+  {
+    "question": "ERC7575VaultUpgradeable uses ERC-7201 namespaced storage with slot = keccak256('erc7575.vault.storage'). If the upgrade mechanism does not prevent the new implementation from using a different namespace (e.g., keccak256('erc7575.vault.storage.v2')), can the new implementation operate on a completely fresh storage struct, losing all existing vault state (asset, totalPendingDeposit, controllerToRequest), effectively resetting the vault and locking all user funds?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_afdf8619-9a74-4f20-a930-af48e05ffdda",
+    "timestamp": "2025-12-02 17:28:16.832617",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575Vault constructor calculates _offset = 10 ** (18 - _decimals) where _decimals is read from the asset token's decimals() function (line ~88). If the asset contract is malicious and returns decimals() = 0, does _offset = 10^18, causing convertToShares() to multiply by 1e18 and potentially overflow for any reasonable deposit amount, DoS'ing the vault? ",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_4629e234-4427-4de4-b82a-82e24fec6cb7",
+    "timestamp": "2025-12-02 17:28:47.813946",
+    "report_generated": false
+  },
+  {
+    "question": "In WERC7575Vault.convertToShares(), the function returns assets * _offset (line ~252). If _decimals = 18 (DAI), _offset = 1, and assets = type(uint256).max, does the multiplication overflow silently in unchecked arithmetic, wrapping to a small value and minting far fewer shares than deserved, allowing the attacker to deposit massive amounts and withdraw later by redeeming at correct conversion, draining the vault? ",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_29969b8b-0bdc-4036-b701-536aadc484ab",
+    "timestamp": "2025-12-02 17:29:17.912828",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575Vault.convertToAssets() divides shares / _offset (line ~261). If _offset = 1 (for 18-decimal assets), the division is identity.  But if _offset was incorrectly calculated due to a non-standard asset token that changes decimals() return value after deployment (e.g., upgradeable token), can the conversion return incorrect asset amounts, causing withdrawals to over/under-pay users?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_25888360-3602-4010-80de-0adea131be9d",
+    "timestamp": "2025-12-02 17:29:47.715115",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575Vault.deposit() calls _shareToken.mint(msg.sender, shares) to issue shares (line ~145). If the ShareToken contract has a reentrancy vulnerability in its mint() function (e.g., it calls an external hook before updating balances), can an attacker re-enter deposit() and mint shares multiple times for a single asset deposit, violating the token supply conservation invariant?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_ce257c63-d0dc-40e0-91e2-7ba693cefc93",
+    "timestamp": "2025-12-02 17:30:18.347973",
+    "report_generated": false
+  },
+  {
+    "question": "In WERC7575Vault.redeem(), the function burns shares via _shareToken.burn(msg. sender, shares) and then transfers assets to the receiver (line ~180). If the asset token is a malicious ERC20 that re-enters redeem() during the transfer (e.g., via a transfer hook), can the attacker burn shares once but withdraw assets multiple times before the share burn completes, draining the vault?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_949a4873-e808-4b72-be6e-541bfdcf9e0b",
+    "timestamp": "2025-12-02 17:30:47.606997",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575Vault.deposit() converts assets to shares using convertToShares(assets).  If the conversion rounds down (due to integer division) and an attacker makes many small deposits (e.g., 1 wei each), can the rounding loss accumulate such that the attacker deposits X assets but receives < X equivalent shares, and the vault retains the dust as profit?  Conversely, if rounding up, can the attacker receive more shares than deserved, inflating supply? ",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_98d7ad93-c012-4c58-a339-6a7454f43038",
+    "timestamp": "2025-12-02 17:31:17.835529",
+    "report_generated": false
   }
 ]
