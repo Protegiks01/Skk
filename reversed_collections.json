@@ -298,5 +298,155 @@
     "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_47849635-9d75-4640-bdee-69ce23939861",
     "timestamp": "2025-12-02 17:32:04.884970",
     "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable, there are no gap arrays visible in the VaultStorage struct. If a future upgrade adds new fields to VaultStorage, can these new fields overwrite existing mappings or EnumerableSet data, corrupting the activeDepositRequesters or controllersWithPendingDepositCancelations sets and causing fund loss?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_425dbf79-23b1-4c80-85c9-7e378e229696",
+    "timestamp": "2025-12-02 17:33:16.271260",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.upgradeToAndCall() (lines 2185-2187), the function accepts arbitrary calldata to execute on the new implementation. If the new implementation has a function that can manipulate storage without proper access control, can an attacker use upgradeToAndCall() to bypass normal authorization and directly modify totalPendingDepositAssets or other critical state?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_6b0699d8-fdae-425a-b9ae-5c2fee89d4cb",
+    "timestamp": "2025-12-02 17:33:29.418683",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.initialize() (lines 150-190), the initializer modifier prevents re-initialization. However, if an upgraded implementation adds new storage variables without using proper namespaced storage, can these new variables collide with the existing VaultStorage struct, corrupting critical fields like investmentManager or totalClaimableRedeemAssets?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_1095ca7f-543b-4aa4-845f-213836b45544",
+    "timestamp": "2025-12-02 17:33:43.648269",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable._getVaultStorage() (lines 132-137), the storage slot is calculated as keccak256('erc7575.vault.storage'). If a malicious upgrade uses a different storage slot string or overwrites this slot, can it corrupt the VaultStorage struct fields (asset, shareToken, totalPendingDepositAssets, etc.), causing permanent fund loss or state confusion?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_5cc735be-974d-4d5a-94e5-eb0889a5f072",
+    "timestamp": "2025-12-02 17:33:57.866133",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.upgradeTo() (lines 2176-2178), only the onlyOwner modifier protects the upgrade. If the owner's private key is compromised, can an attacker upgrade to a malicious implementation that steals all vault assets, pending deposits, and claimable redemptions? What storage slot collisions could occur if the new implementation uses different ERC-7201 namespaced slots?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_49e296d0-1df6-4e89-85d3-77b165d50456",
+    "timestamp": "2025-12-02 17:34:13.040934",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.withdrawFromInvestment() (lines 1477-1509), the external call to IERC7575($.investmentVault).redeem() occurs with a nonReentrant guard. However, if the investment vault is malicious and makes nested calls to other vault functions, can it exploit state changes that occurred before the redeem call but during the same transaction?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_96815d65-2552-44e9-8301-6a50523854ba",
+    "timestamp": "2025-12-02 17:34:29.183064",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.claimCancelDepositRequest() (lines 1691-1711), state deletion occurs (line 1702) before asset transfer (line 1707). If the SafeTokenTransfers.safeTransfer() call reenters the contract, can the attacker call claimCancelDepositRequest() again in the same transaction, exploiting the fact that claimableCancelDepositAssets[controller] is already deleted but the first transfer hasn't completed?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_6db38de8-03ce-4e2d-8da5-4cb083deaac6",
+    "timestamp": "2025-12-02 17:34:47.204425",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.redeem() (lines 885-918), shares are burned (line 912) after state updates (lines 899-909) but before asset transfer (line 916). If SafeTokenTransfers.safeTransfer() reenters via a malicious asset token, can the attacker exploit the post-burn but pre-transfer state to manipulate reserved asset calculations or initiate another redeem?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_d63a4477-180f-4d9f-98d0-dcca853c1972",
+    "timestamp": "2025-12-02 17:35:07.206867",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.deposit() (lines 557-589), state is updated (lines 574-581) before the share transfer (lines 586-588). If the ShareToken.transfer() call reenters the vault via another function, can the attacker exploit the fact that claimableDepositShares[controller] has been decremented but shares haven't been transferred yet, potentially claiming the same shares twice via parallel flows?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_48be50f6-40e2-4ffe-891d-20402dece910",
+    "timestamp": "2025-12-02 17:35:29.219142",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.requestDeposit() (lines 341-371), the SafeTokenTransfers.safeTransferFrom() call (line 361) occurs before state updates (lines 364-366). While this follows Pull-Then-Credit pattern, if the asset token has a transfer callback that calls back into requestDeposit() or other vault functions, can the reentrancy guard alone prevent exploitation, or can state inconsistency still occur?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_9d57c13e-7c3f-4c9b-9302-e3ac7d9d1e3c",
+    "timestamp": "2025-12-02 17:35:51.685613",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.withdraw() (lines 927-962), shares are calculated as assets.mulDiv(availableShares, availableAssets, Math.Rounding.Floor). If the user requests to withdraw all their claimableRedeemAssets but the Floor rounding causes calculated shares to be 1 wei less than availableShares, will there be permanent dust shares left in claimableRedeemShares that can never be claimed?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_2f55d5dd-21c2-4b1e-bffe-736a4637cf71",
+    "timestamp": "2025-12-02 17:36:15.649395",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.deposit() (lines 557-589), shares are calculated as assets.mulDiv(availableShares, availableAssets, Math.Rounding.Floor). If availableAssets is very small due to partial claims, can the rounding cause shares to round down to zero even when assets > 0, causing the ZeroSharesCalculated revert and preventing users from claiming their fulfilled deposits?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_f6271ab0-64ef-4570-b15d-87c1fa1898a8",
+    "timestamp": "2025-12-02 17:36:40.483034",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.initialize() (lines 150-190), the scalingFactor is calculated as 10^(18 - assetDecimals) and cast to uint64. For assets with decimals < 18, this works correctly. But if assetDecimals == 18, scalingFactor == 1. Can this edge case cause precision loss in _convertToShares() where the normalization step becomes a no-op, leading to conversion inaccuracies?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_b8dc1d60-b71a-4901-a3b7-479d027acefb",
+    "timestamp": "2025-12-02 17:37:07.141113",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable._convertToAssets() (lines 1204-1216), the denormalization divides normalizedAssets by scalingFactor. If scalingFactor == 0 (impossible per initialize() checks) or if the division rounds down to zero for small share amounts, can users request redeems that calculate to 0 assets, causing ZeroAssets reverts and trapping their shares?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_154d81dc-5f6e-4c25-a647-fce14f46245f",
+    "timestamp": "2025-12-02 17:37:35.017271",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable._convertToShares() (lines 1188-1196), assets are first normalized to 18 decimals by multiplying by scalingFactor, then converted using ShareToken.convertNormalizedAssetsToShares(). If scalingFactor is larger than uint64.max (checked only in initialize), can a malicious owner set a vault with extreme decimal mismatch that causes overflow in this multiplication, bricking all deposit/redeem conversions?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_d9d6f239-a508-4b1e-8c7a-a7647a790558",
+    "timestamp": "2025-12-02 17:38:02.802729",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.claimCancelDepositRequest() (lines 1691-1711), operator authorization is checked using IERC7540($.shareToken).isOperator(controller, msg.sender). If the operator was approved after the cancelation was initiated but before claim, can they claim the canceled assets to a different receiver, stealing funds from the original controller?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_e9c3eb91-0fb7-4f85-803a-0423a71d0de7",
+    "timestamp": "2025-12-02 17:38:31.198995",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.deposit() (lines 557-589), the controller authorization check uses isOperator(controller, msg.sender). If the ShareToken's isOperator() function has stale state or caching issues, can a revoked operator still claim shares by calling deposit() before the operator revocation is reflected in the vault's view of the operator state?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_d3c62c1f-a665-4183-963d-7589ccf883bc",
+    "timestamp": "2025-12-02 17:39:00.033879",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.setOperator() (lines 264-271), the function delegates to ShareToken.setOperatorFor(msg.sender, operator, approved). If the ShareToken's setOperatorFor() has a bug that allows unauthorized operator changes, can this be exploited through the vault's setOperator() interface to gain operator permissions without proper authorization?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_b16d368f-2362-43d6-8cae-e3111d48a246",
+    "timestamp": "2025-12-02 17:39:28.047135",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.requestRedeem() (lines 715-751), both operator approval AND ERC20 allowance can authorize redemptions. If an operator is approved but has no ERC20 allowance, they can bypass the spendAllowance() call. Can this enable an operator to redeem shares without proper allowance tracking, breaking accounting assumptions in the ShareToken's allowance system?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_547f2af5-9d7b-4e4a-b84b-c48d705691ef",
+    "timestamp": "2025-12-02 17:39:56.552977",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.requestDeposit() (lines 341-371), the function checks if owner == msg.sender OR isOperator(owner, msg.sender). If the operator approval is revoked on the ShareToken after this check but before the asset transfer, can the transfer still succeed, granting an unauthorized party control over the deposit request and its eventual shares?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_0e4338cd-d9a4-459f-9bb1-1e3ce60029ac",
+    "timestamp": "2025-12-02 17:40:26.088964",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.fulfillCancelDepositRequests() batch function (lines 1034-1051), if pendingAssets > 0 for a controller, it moves them to claimable without checking if the vault actually has sufficient balance. If multiple controllers cancel simultaneously and assets were already invested, can this create claimable cancelations that exceed vault balance, causing claimCancelDepositRequest() calls to fail for later claimants?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_76fe6cea-27fd-494b-9e8e-61df675b0907",
+    "timestamp": "2025-12-02 17:40:55.967047",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.cancelDepositRequest() (lines 1574-1595), the totalCancelDepositAssets is incremented, which affects totalAssets() calculation. If a user cancels a large deposit, does this create a large reserved amount that prevents the investment manager from investing other available assets, creating a griefing vector where malicious users can repeatedly request and cancel deposits to block investments?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a21b9517-db15-4e25-bd5f-de26e3ee4afd",
+    "timestamp": "2025-12-02 17:41:25.164141",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.claimCancelRedeemRequest() (lines 1866-1885), shares are transferred back to the owner using SafeTokenTransfers.safeTransfer($.shareToken, owner, shares). If the ShareToken transfer reverts due to KYC restrictions or other share token constraints, does this brick the entire cancelation claim process, permanently locking the user's shares in the vault?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a7d3d7cd-8814-43bc-b982-4a387563bc98",
+    "timestamp": "2025-12-02 17:41:55.323275",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.cancelRedeemRequest() (lines 1745-1764), shares are moved from pendingRedeemShares to pendingCancelRedeemShares. However, unlike deposit cancelations, there is no tracking of totalCancelRedeemShares that affects totalAssets(). If these shares are still held by the vault but not burned, can they be double-counted in circulating supply calculations, enabling share inflation?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_667a3f50-10ce-465f-a12c-c3ec8670aa31",
+    "timestamp": "2025-12-02 17:42:26.615025",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.cancelDepositRequest() (lines 1574-1595), the function moves assets from pendingDepositAssets to pendingCancelDepositAssets and adds the controller to controllersWithPendingDepositCancelations, which blocks new deposit requests. If the investment manager never calls fulfillCancelDepositRequest(), can the controller be permanently blocked from making new deposits while their original assets are stuck in pending cancelation state?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_54dd30f6-4c08-4416-bf55-116b4ee59956",
+    "timestamp": "2025-12-02 17:42:56.936213",
+    "report_generated": false
   }
 ]
