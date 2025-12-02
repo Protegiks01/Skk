@@ -898,5 +898,155 @@
     "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_97212bd7-f05e-4061-8e10-0a6814fe61b0",
     "timestamp": "2025-12-02 18:14:42.341549",
     "report_generated": false
+  },
+  {
+    "question": "In WERC7575Vault.deposit() (line 332), assets are transferred using SafeTokenTransfers.safeTransferFrom(), then shares are minted. The shares are calculated as (assets * $.decimalOffset) where decimalOffset = 10^(18 - assetDecimals). If assets * decimalOffset overflows uint256 for a high-decimal asset, could the transaction revert in the share calculation AFTER SafeTokenTransfers validated the transfer, causing the assets to be stuck in the vault without corresponding shares minted?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_02c7cdd2-7f17-4b28-bb74-7125d5d2f02f",
+    "timestamp": "2025-12-02 18:15:50.605579",
+    "report_generated": false
+  },
+  {
+    "question": "SafeTokenTransfers.safeTransfer() validates exact transfer amounts. When claiming redeemed assets in ERC7575VaultUpgradeable.claimRedeem() (line 916), the assets amount is calculated via convertToAssets(shares). If this conversion involves division that truncates small amounts (e.g., shares < 1e18), could the claim attempt to transfer 0 assets, passing SafeTokenTransfers validation but failing to return user funds, effectively locking small redemptions?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_1fd2fa53-c884-4504-bad3-21bf72d04104",
+    "timestamp": "2025-12-02 18:16:04.238689",
+    "report_generated": false
+  },
+  {
+    "question": "SafeTokenTransfers.safeTransferFrom() is used in requestDeposit() to pull assets into the vault. These assets are added to $.pendingDepositAssets which contributes to reservedAssets. If the Investment Manager calls investAssets() to move funds to the investment vault, but the calculation of available assets for investment doesn't account for in-flight transfers (where SafeTokenTransfers has validated the transfer but the state update hasn't completed due to reentrancy), could this allow over-investment beyond the safety threshold (totalAssets - reservedAssets)?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_8260b75d-e690-4467-a3b5-a06c96f52e1f",
+    "timestamp": "2025-12-02 18:16:18.609112",
+    "report_generated": false
+  },
+  {
+    "question": "In claimRedeem() (line 915-916), SafeTokenTransfers.safeTransfer() sends assets to the receiver. However, $.totalClaimableRedeemAssets is decremented BEFORE the transfer at line 903. If the transfer fails due to a malicious receiver contract that reverts in its receive() function, could the SafeTokenTransfers validation prevent state rollback, causing $.totalClaimableRedeemAssets to be permanently decremented without assets leaving the vault, breaking the reserved asset invariant?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_14d8e7c1-b6d3-4354-996b-aea01db6eec3",
+    "timestamp": "2025-12-02 18:16:33.607550",
+    "report_generated": false
+  },
+  {
+    "question": "SafeTokenTransfers is a library with internal functions (lines 49, 63). If the vault contracts using this library (ERC7575VaultUpgradeable, WERC7575Vault) are upgraded via UUPS to a new implementation that replaces SafeTokenTransfers with a different transfer mechanism, could existing pending deposits that were validated with SafeTokenTransfers' strict checks become vulnerable if the new implementation allows fee-on-transfer tokens, enabling an attacker to exploit the transition window to deposit undervalued assets?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_62632190-a6f8-4f54-8190-ba77ee348d06",
+    "timestamp": "2025-12-02 18:16:48.393008",
+    "report_generated": false
+  },
+  {
+    "question": "SafeTokenTransfers doesn't maintain any storage state. However, it's used within ERC7575VaultUpgradeable which uses ERC-7201 namespaced storage. If the vault is upgraded and the new implementation changes how balances are tracked (e.g., adding a new $.assetBalanceCache variable), could the balance check in SafeTokenTransfers at line 67 become invalid because it reads live balanceOf() but the vault's internal accounting uses the cached value, causing mismatches?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_48273147-2065-48b4-b507-640d1f0c475b",
+    "timestamp": "2025-12-02 18:17:04.293587",
+    "report_generated": false
+  },
+  {
+    "question": "SafeTokenTransfers.safeTransfer() and safeTransferFrom() both validate balances independently. In the async flow, requestDeposit() uses safeTransferFrom() (line 361) and claimRedeem() uses safeTransfer() (line 916). If a user deposits assets, waits for fulfillment, then immediately redeems and claims within the same block, could there be a timing issue where the two SafeTokenTransfers validations interfere with each other due to balance state changes happening between the calls, causing unexpected TransferAmountMismatch reverts?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a9648308-a42f-4b6e-acd3-4c48672cb709",
+    "timestamp": "2025-12-02 18:17:22.654468",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable, both claimRedeem() (line 916) and claimCancelDepositRequest() (line 1707) use SafeTokenTransfers.safeTransfer() to send assets. If a user has both a claimable redemption and a claimable deposit cancellation for the same asset amount, could calling both claim functions in the same transaction cause the second SafeTokenTransfers validation to fail because the vault's asset balance was already reduced by the first claim, even though both claims were legitimate?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_e60779e6-f96c-4a39-9d75-81e67f396f88",
+    "timestamp": "2025-12-02 18:17:42.523663",
+    "report_generated": false
+  },
+  {
+    "question": "SafeTokenTransfers.safeTransferFrom() calls balanceOf() at lines 64 and 66. If the asset token's balanceOf() function is non-view (doesn't follow ERC20 standard) and modifies state, could a malicious token implementation use the balanceOf() call at line 66 to reenter the vault contract and call a view function like pendingDepositRequest(), which reads $.pendingDepositAssets that was just updated at line 364, causing inconsistent state to be returned to external observers?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_f444fde0-e17b-43b5-891b-1d3f7e6be19f",
+    "timestamp": "2025-12-02 18:18:03.560184",
+    "report_generated": false
+  },
+  {
+    "question": "In SafeTokenTransfers.safeTransfer() (line 52), the second balanceOf() call occurs after the transfer. If this balanceOf() call triggers a callback in the token contract that calls back to read vault state via maxWithdraw() or maxRedeem() view functions, could the reported maximum values be incorrect because they calculate based on totalAssets() which includes the assets that are currently in-flight in the SafeTokenTransfers validation?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_bce63410-8914-4d25-b141-d48e7ca809eb",
+    "timestamp": "2025-12-02 18:18:26.247818",
+    "report_generated": false
+  },
+  {
+    "question": "SafeTokenTransfers is used by both ERC7575VaultUpgradeable (for underlying assets) and potentially by WERC7575ShareToken (for share transfers in claimCancelRedeemRequest line 1881). If the shareToken is accidentally set to the same address as the asset token, could SafeTokenTransfers balance validation cause double-checking issues where a single transfer is validated twice, or could this enable an attack where the attacker exploits the confusion between asset and share transfers to manipulate accounting?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_94dc09db-d535-4fb1-9e4f-86ae85c8971a",
+    "timestamp": "2025-12-02 18:18:50.121669",
+    "report_generated": false
+  },
+  {
+    "question": "In a multi-vault deployment where different vaults have different assets, SafeTokenTransfers.safeTransferFrom() is called with different token addresses. If one asset token has a malicious implementation that manipulates SafeTokenTransfers behavior, could this affect the operation of other vaults? For example, if token A's balanceOf() consumes excessive gas, could this DOS all vaults, or is each vault isolated in its SafeTokenTransfers usage?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_9b72b26a-a754-4991-8167-706b0a10ad96",
+    "timestamp": "2025-12-02 18:19:15.220415",
+    "report_generated": false
+  },
+  {
+    "question": "SafeTokenTransfers.safeTransferFrom() (line 63) uses SafeERC20.safeTransferFrom() internally. If the asset token is a wrapper around another protocol's token (like Wrapped Bitcoin or Wrapped Ether), and the underlying protocol has a paused state, could SafeTokenTransfers fail to detect this pause condition, allowing users to request deposits that appear to succeed (balance check passes) but the underlying value is locked in a paused protocol?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_0c627f4c-267e-4120-a3be-aa7cde4d8ed7",
+    "timestamp": "2025-12-02 18:19:40.763583",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.requestDeposit() (line 361), SafeTokenTransfers.safeTransferFrom() validates the transfer from the user. If the asset token implements a whitelist mechanism (like USDC's blacklist), and the user's address gets blacklisted between the ownerBalance check (line 349) and the actual transfer (line 361), could SafeTokenTransfers validation pass but the vault never receive the assets, causing state corruption in $.pendingDepositAssets?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_55ee3623-8799-4b6e-b524-1d26c32f0ac6",
+    "timestamp": "2025-12-02 18:20:07.363042",
+    "report_generated": false
+  },
+  {
+    "question": "SafeTokenTransfers.safeTransfer() (line 53) checks if balanceAfter != balanceBefore + amount. If amount == type(uint256).max and balanceBefore > 0, the addition would overflow in Solidity <0.8.0. Since this contract uses ^0.8.30 with overflow protection, the addition would revert. However, could a malicious token contract return type(uint256).max from balanceOf() at line 50, causing the addition to revert not with TransferAmountMismatch but with overflow error, hiding the actual issue?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_aeb54c5f-7932-41d9-acc1-101d6ddbb48b",
+    "timestamp": "2025-12-02 18:20:34.903847",
+    "report_generated": false
+  },
+  {
+    "question": "In SafeTokenTransfers.safeTransferFrom() (line 67), if the asset token implements a maximum balance limit per address (like some regulatory compliance tokens), and the recipient is already at the limit, could the transfer partially succeed (transferring only up to the limit) while the balance check expects the full amount, causing TransferAmountMismatch revert that DOS all deposits for addresses near their balance limit?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_4730f1db-4f42-48f4-99eb-461446402d94",
+    "timestamp": "2025-12-02 18:21:03.544936",
+    "report_generated": false
+  },
+  {
+    "question": "SafeTokenTransfers.safeTransfer() reads recipient balance at line 50 before transfer. If the recipient is a contract that self-destructs during the transfer callback (via ERC777 hook), causing all its balance to be sent to a beneficiary, could the balance check at line 53 fail even though the transfer technically succeeded, creating a permanent DOS for withdrawals to certain recipient addresses?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_36083d3e-f05e-494e-a59b-6a27cd851982",
+    "timestamp": "2025-12-02 18:21:33.619026",
+    "report_generated": false
+  },
+  {
+    "question": "SafeTokenTransfers uses IERC20Metadata interface (line 4). If the asset token implements ERC1363 payable token standard with transferAndCall(), and a user attempts a deposit, could the regular transfer() call in SafeTransfer work but the balance validation fail if the token's transferAndCall() implementation has different balance adjustment logic than standard transfer()?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_9737127a-5c91-418c-90cf-2234d8a820e2",
+    "timestamp": "2025-12-02 18:22:03.464527",
+    "report_generated": false
+  },
+  {
+    "question": "SafeTokenTransfers.safeTransferFrom() assumes standard ERC20 behavior. If the asset token implements ERC4626 vault token standard (yield-bearing), where share balances are computed dynamically from underlying assets, could the balance check at line 67 fail intermittently as the exchange rate changes between the two balanceOf() calls at lines 64 and 66, causing non-deterministic failures for deposits?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_66e13eb6-3513-4213-bbba-b2348768d35c",
+    "timestamp": "2025-12-02 18:22:35.717941",
+    "report_generated": false
+  },
+  {
+    "question": "In SafeTokenTransfers.safeTransfer() (line 51), if the asset token implements permit() (EIP-2612) and uses a non-standard approval mechanism where transferFrom() can succeed without prior approve(), could this affect the balance validation if the token's transfer logic differs between transfer() and transferFrom() paths, potentially allowing bypass of the strict amount verification?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a4ad1233-ca6d-4979-b7e5-334f34b57323",
+    "timestamp": "2025-12-02 18:23:07.204574",
+    "report_generated": false
+  },
+  {
+    "question": "SafeTokenTransfers.safeTransferFrom() validates transfers at the token contract level (balanceOf checks). However, ERC7575VaultUpgradeable maintains its own accounting state in $.pendingDepositAssets and $.totalPendingDepositAssets. If a contract upgrade introduces a bug where these state variables don't match actual token balances held by the vault, could SafeTokenTransfers continue passing validation while the vault's internal accounting diverges, eventually causing insolvency?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_cfa82ca8-0508-4445-8bf4-7630e8088075",
+    "timestamp": "2025-12-02 18:23:35.435569",
+    "report_generated": false
+  },
+  {
+    "question": "In the async deposit flow, SafeTokenTransfers.safeTransferFrom() is called in requestDeposit() (line 361), but the actual share minting happens later in fulfillDepositRequest(). If the vault's totalAssets() calculation (which affects conversion rates) includes assets from completed SafeTokenTransfers but not yet fulfilled requests, could this create a window where an attacker can exploit the accounting mismatch to mint shares at a manipulated rate?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_8cf20e84-5c4b-4212-a1ff-450fe20c731e",
+    "timestamp": "2025-12-02 18:24:01.772508",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575ShareToken.permit() validates EIP-712 signatures and checks if owner == spender, requiring validator signature for self-approvals. If a malicious KYC-verified user creates a permit signature where owner != spender but the spender is a contract they control, can they bypass the validator signature requirement and gain unauthorized self-allowance to enable transfers without proper authorization?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_7ab9ad52-048f-4846-afcf-797926bfbeff",
+    "timestamp": "2025-12-02 18:24:28.025497",
+    "report_generated": false
+  },
+  {
+    "question": "In WERC7575ShareToken.permit() (lines 396-429), the function uses _useNonce(owner) to increment nonces and prevent replay attacks. If an attacker front-runs a legitimate permit() call with the same nonce and parameters but a different spender address, can they consume the nonce and cause the victim's transaction to revert, effectively denying service to permit-based approvals?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_66bd1f77-097d-4f83-b6ac-d57b23d368d8",
+    "timestamp": "2025-12-02 18:24:54.746586",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575ShareToken.permit() allows self-approvals (owner == spender) only with validator signatures. If the DOMAIN_SEPARATOR used in _hashTypedDataV4() is not chain-specific or can be manipulated across forks, can an attacker replay a valid validator-signed permit from a testnet to grant unauthorized self-allowances on mainnet?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_babe00bd-8f30-41d3-a078-799813e81b9c",
+    "timestamp": "2025-12-02 18:25:19.233777",
+    "report_generated": false
   }
 ]
