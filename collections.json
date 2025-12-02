@@ -598,5 +598,155 @@
     "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_ea35f459-e0d9-4a5d-8cae-30cbbe921d07",
     "timestamp": "2025-12-02 17:52:59.243742",
     "report_generated": false
+  },
+  {
+    "question": "The investAssets() function in ERC7575VaultUpgradeable checks that `investedAssets + amount <= totalAssets() - reservedAssets()` to prevent over-investment. If reserved assets are calculated by converting pending/claimable share amounts (18 decimals) to asset amounts (6-18 decimals) using _convertToAssets() with Floor rounding, each conversion can lose up to 1 wei of precision. For a vault with 1000 pending requests, this could under-report reserved assets by up to 1000 wei. If asset has MIN_ASSET_DECIMALS (6), 1000 wei = 0.000000001 assets. While small, could an attacker exploit this by timing investments immediately after batch fulfillments to maximize the rounding loss, eventually allowing investment of assets that should be reserved for redemptions?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_aaf90848-0ea5-4cf5-9239-f6fe717760d6",
+    "timestamp": "2025-12-02 17:54:11.622505",
+    "report_generated": false
+  },
+  {
+    "question": "DecimalConstants.MIN_ASSET_DECIMALS and SHARE_TOKEN_DECIMALS are declared as constants, making them immutable. However, if a future protocol upgrade requires supporting assets with fewer than 6 decimals (e.g., a token with 2 decimals), the only way to change MIN_ASSET_DECIMALS would be to deploy a new DecimalConstants library and update all contracts to import it. If this change is performed incorrectly—for example, upgrading ERC7575VaultUpgradeable to use new constants but forgetting to upgrade WERC7575Vault—could the two vault implementations have inconsistent decimal validations, allowing an attacker to create vaults for 2-decimal assets in the non-upgradeable version while the upgradeable version rejects them, causing asset-vault mapping conflicts?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_0f534318-3dd8-417f-8d28-1d43ff88a645",
+    "timestamp": "2025-12-02 17:54:25.186386",
+    "report_generated": false
+  },
+  {
+    "question": "The scaling factor is stored as uint64 in both vault implementations. The maximum uint64 value is approximately 1.8e19. The maximum scaling factor occurs when assetDecimals = MIN_ASSET_DECIMALS = 6, giving 10^(18-6) = 10^12. This is well within uint64 range. However, if DecimalConstants.MIN_ASSET_DECIMALS were reduced to 0 (to support tokens like Bitcoin with 0 decimals), the scaling factor would be 10^18, which exceeds uint64.max. The validation checks for this and reverts with ScalingFactorTooLarge(). But could an attacker exploit a race condition where MIN_ASSET_DECIMALS is changed in DecimalConstants.sol but existing vaults with the old constants still exist, creating an inconsistency that allows bypass of the uint64 check in new deployments?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_406e035d-dbf8-48b0-9ead-530198819a7d",
+    "timestamp": "2025-12-02 17:54:39.370878",
+    "report_generated": false
+  },
+  {
+    "question": "SukukFi supports multiple assets via the asset-to-vault registry in WERC7575ShareToken. Each asset can have different decimals (6-18), and each vault calculates its own scaling factor. If Vault A uses an asset with 6 decimals (scalingFactor = 10^12) and Vault B uses an asset with 18 decimals (scalingFactor = 1), both mint shares to the same ShareToken with 18 decimals. When a user transfers shares minted from Vault A to another user who wants to redeem them via Vault B, the shares are in 18 decimals but represent different underlying asset values. Could this cross-vault share transfer enable arbitrage where the attacker exploits the decimal normalization to extract value by depositing in one vault and redeeming in another?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_2818ae76-7b91-4c12-9395-ab27998d7e3b",
+    "timestamp": "2025-12-02 17:54:53.587232",
+    "report_generated": false
+  },
+  {
+    "question": "The protocol enforces the invariant that `convertToShares(convertToAssets(x)) ≈ x` within 1 wei rounding. For an asset with MIN_ASSET_DECIMALS (6), convertToAssets() divides shares by 10^12 with Floor rounding, potentially losing up to (10^12 - 1) of precision. If x = 10^12 shares (representing 1 asset unit), convertToAssets(x) = 1 asset, then convertToShares(1 asset) = 10^12 shares, recovering the original value. However, if x = 10^12 + 1 shares, convertToAssets(x) still equals 1 asset (floor division), and convertToShares(1) = 10^12 shares, losing 1 share. Over many round-trip conversions in async deposit-redeem cycles, could this 1-share loss per conversion accumulate to a significant amount that violates the ≤1 wei rounding tolerance and enables profit extraction?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_717037d5-3192-4f3f-8e70-c8a768d276e0",
+    "timestamp": "2025-12-02 17:55:08.455010",
+    "report_generated": false
+  },
+  {
+    "question": "In WERC7575ShareToken, permits authorize transfer of share amounts specified in 18 decimals (due to SHARE_TOKEN_DECIMALS = 18). When a permit is used in transferFrom() or batchTransfers(), the share amounts are directly compared against allowances without decimal conversion. If the underlying asset has MIN_ASSET_DECIMALS (6), and a user requests a permit for 10^12 shares (= 1 asset), but the UI or permit generator miscalculates by using asset decimals (6) instead of share decimals (18), the permit would be for 10^6 units instead of 10^12. Could this decimal confusion in permit generation lead to users unintentionally authorizing 10^6x smaller or larger amounts, enabling either denial of service (permit too small) or unauthorized large transfers (permit too large)?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_102dc15e-0967-4692-bbf5-074759a9cd7e",
+    "timestamp": "2025-12-02 17:55:24.709955",
+    "report_generated": false
+  },
+  {
+    "question": "ERC7575VaultUpgradeable.investAssets() transfers assets to an external investment vault. The amount parameter is in asset decimals (6-18 depending on the asset). If the investment vault expects amounts in a different decimal precision (e.g., it internally normalizes to 18 decimals), and the integration does not properly convert between the SukukFi vault's asset decimals and the investment vault's expected decimals, could this cause the invested amount to be misinterpreted? For example, investing 1000 units of a 6-decimal asset (1000e6) could be interpreted by the investment vault as 1000e18, resulting in a 10^12x accounting error that breaks the reserved asset protection invariant.",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_95664ed5-d424-451d-863f-abbae0cbba7e",
+    "timestamp": "2025-12-02 17:55:42.092508",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.initialize() (line 186), the decimal offset is calculated as `SHARE_TOKEN_DECIMALS - assetDecimals`. For an asset with exactly SHARE_TOKEN_DECIMALS (18), the offset is 0, and scalingFactor = 10^0 = 1. The code has a special case in _convertToAssets() (line 241) that returns shares directly when scalingFactor == 1. However, if assetDecimals is obtained from a token's decimals() call that mistakenly returns 19 (higher than max), the validation at line 161 would reject it because the check is `decimals > SHARE_TOKEN_DECIMALS`. But if the decimals() call is maliciously manipulated to return exactly 18 during validation but 19 later, the offset calculation would underflow (18 - 19 = -1 in unsigned arithmetic), wrapping to type(uint8).max = 255. Could this cause the scaling factor to be calculated as 10^255, which would massively overflow and revert, or could it bypass the uint64 validation check due to modular arithmetic?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_7b8503bb-bad5-4982-b6ba-1bd0af72bb8b",
+    "timestamp": "2025-12-02 17:56:02.112162",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575ShareToken tracks rBalances (investment-adjusted balances) alongside regular _balances. The adjustRBalance() function modifies rBalance based on investment profits/losses. If rBalance adjustments are calculated using asset values (with varying decimals 6-18) but stored in 18-decimal precision, and the adjustment calculation does not properly scale by the decimal offset, could an attacker trigger profit/loss events that cause rBalance to diverge from _balances by more than the expected investment return? For example, if a vault has 6-decimal assets and generates 0.01% profit (in 6 decimals), but the rBalance adjustment mistakenly applies this percentage to the 18-decimal share amount without scaling, the rBalance could increase by 10^12x more than intended, allowing unauthorized share minting.",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_833389b6-6d4b-436c-ac1f-0e6fe40f63c6",
+    "timestamp": "2025-12-02 17:56:23.395215",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable, deposit requests are stored in pendingDepositRequest[receiver] as share amounts (after conversion via _convertToShares). Redeem requests are stored in pendingRedeemRequest[owner] as share amounts directly. When fulfillDepositRequest() is called, it converts the pending shares back to assets via _convertToAssets() to determine how much to transfer, then mints the original pending share amount. If the asset's decimals() value changes between request and fulfillment (e.g., via malicious token upgrade), the scaling factor used in _convertToAssets() would be stale. Could this cause a unit mismatch where the vault transfers an incorrect amount of assets while minting the originally requested shares, breaking the 1:1 asset-share value parity and enabling theft?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_f8425a43-9876-4c6e-ac4b-ac77e7af839e",
+    "timestamp": "2025-12-02 17:56:46.189381",
+    "report_generated": false
+  },
+  {
+    "question": "ERC7575VaultUpgradeable.initialize() sets minimumDepositAmount = 1000 (line 189) without specifying units. Subsequent deposit validations check `assets >= minimumDepositAmount` where assets are in the asset's native decimals (6-18). For a 6-decimal asset like USDC, 1000 base units = 0.001 USDC, which is a reasonable minimum. But for an 18-decimal asset like DAI, 1000 base units = 0.000000000000001 DAI, effectively no minimum. Could an attacker exploit this by depositing extremely small amounts in 18-decimal assets (e.g., 1001 wei) that bypass minimum checks but create many tiny pending requests, bloating storage and enabling grief attacks via mass cancellations or redemption request spamming?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_ea8a7c0d-fa7e-43f4-8603-1bcbc98bbe3c",
+    "timestamp": "2025-12-02 17:57:09.994908",
+    "report_generated": false
+  },
+  {
+    "question": "The _convertToAssets() function uses Math.mulDiv(shares, 1, scalingFactor, rounding) for scalingFactor > 1. When rounding = Floor (favor vault), the division truncates toward zero. For shares < scalingFactor (e.g., shares = 10^11 when scalingFactor = 10^12), the result is 0 assets. If a user has a claimableRedeemRequest of 10^11 shares, calling claimRedeem() would burn their shares but transfer 0 assets, causing total loss of funds. While the protocol likely prevents creating requests below a minimum, could an attacker exploit rounding in batch operations or investment adjustments to reduce a victim's claimable shares just below the scalingFactor threshold, causing their redemption to yield 0 assets?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_50efeb9f-e76d-452f-96a7-b40d3f0cba72",
+    "timestamp": "2025-12-02 17:57:34.862215",
+    "report_generated": false
+  },
+  {
+    "question": "If the investment layer generates yield that is distributed by adjusting rBalances, and the yield percentage is calculated using asset values (6-18 decimals) but applied to share balances (18 decimals), small rounding errors could compound over time. For example, if a vault with 6-decimal assets generates 0.01% daily yield, and this is applied to shares by multiplying by (1 + 0.0001), the multiplication introduces rounding in the least significant digits. Over 365 days, could these rounding errors accumulate to a >0.1% discrepancy between actual asset value and share value, enabling an attacker who deposits at day 0 and withdraws at day 365 to extract the accumulated rounding profit?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_1b1712bd-270f-4697-85f6-eaa435c3f56f",
+    "timestamp": "2025-12-02 17:58:00.795693",
+    "report_generated": false
+  },
+  {
+    "question": "DecimalConstants.SHARE_TOKEN_DECIMALS = 18 enforces that all share tokens have 18 decimals, regardless of underlying asset. If two vaults (Vault A with 6-decimal USDC, Vault B with 18-decimal DAI) both mint shares to the same ShareToken instance, and a user deposits 1 USDC (1e6) in Vault A to receive 1e18 shares, then deposits 1 DAI (1e18) in Vault B to receive 1e18 shares, both deposits yield the same share amount despite representing vastly different asset values (assuming 1 USDC ≈ 1 DAI). However, the asset-to-vault registry enforces one-to-one mapping, preventing this scenario. But could an attacker exploit edge cases in vault registration or de-registration to temporarily create a state where shares from different decimal assets are fungible, enabling value extraction?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_80ee75a6-af88-4d0a-8a00-8fa70b3a0b4e",
+    "timestamp": "2025-12-02 17:58:30.809375",
+    "report_generated": false
+  },
+  {
+    "question": "DecimalConstants.sol is imported by multiple contracts (WERC7575ShareToken, ShareTokenUpgradeable, ERC7575VaultUpgradeable, WERC7575Vault). If the DecimalConstants library is ever recompiled with different constant values (e.g., MIN_ASSET_DECIMALS changed to 8), and only some contracts are redeployed with the new version while others use the old version, could this create a state where different contracts enforce different decimal rules? For example, ShareToken might enforce 18 decimals while a vault expects assets with min 8 decimals, causing initialization failures or allowing deployment of incompatible vaults that bypass the validation.",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_7c765950-f723-4c52-b3db-ddb113a088d7",
+    "timestamp": "2025-12-02 17:59:00.649159",
+    "report_generated": false
+  },
+  {
+    "question": "In _convertToShares(), the multiplication `assets * scalingFactor` is performed inside Math.mulDiv. For assets approaching type(uint256).max and scalingFactor = 10^12 (MIN_ASSET_DECIMALS case), the product could overflow uint256. While Math.mulDiv is designed to handle this via phantom overflow protection, if the implementation has any bugs or edge cases (e.g., when denominator = 1), could an attacker craft an input that causes unexpected overflow behavior, reverting deposit transactions or returning incorrect share amounts that violate the conversion accuracy invariant?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_461f0a32-2a48-425f-b99b-27855dabb45f",
+    "timestamp": "2025-12-02 17:59:31.498674",
+    "report_generated": false
+  },
+  {
+    "question": "ERC7575VaultUpgradeable validates asset decimals in initialize() by calling IERC20Metadata(asset).decimals(). If the asset is a proxy contract whose implementation can be upgraded, an attacker could deploy the asset with decimals() = 8 (valid) during vault initialization, then upgrade the asset's implementation to return decimals() = 5 (below MIN_ASSET_DECIMALS). The vault's stored scaling factor would still be based on 8 decimals (10^10), but subsequent decimals() calls would return 5. If any vault logic re-queries decimals() and uses it in calculations, could this create a mismatch that breaks conversions and enables asset theft?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_e096de0e-e086-4772-9c48-598e55ca048e",
+    "timestamp": "2025-12-02 18:00:02.406142",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575ShareToken.constructor() (line 165) validates `decimals() != SHARE_TOKEN_DECIMALS` and reverts with WrongDecimals(). The decimals() function is inherited from OpenZeppelin's ERC20, which returns a constant uint8 = 18 by default. If an attacker creates a malicious ShareToken that overrides decimals() to return a dynamic value (e.g., reading from storage that can be modified post-deployment), could this bypass the constant enforcement? For example, deploying with decimals() = 18, passing validation, then modifying storage to make decimals() return 6 later, causing all share operations to use 6 decimals while vaults expect 18, breaking the entire decimal normalization system?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_55926b51-9407-4051-b613-3efbe6f145d4",
+    "timestamp": "2025-12-02 18:00:32.728602",
+    "report_generated": false
+  },
+  {
+    "question": "DecimalConstants.SHARE_TOKEN_DECIMALS and MIN_ASSET_DECIMALS are Solidity constants, making them compile-time immutable. If the protocol needs to support a new class of assets (e.g., tokens with 24 decimals or synthetic tokens with dynamic decimals), the only way to update these constants is to deploy entirely new contracts. If such an update is performed, but the asset-to-vault registry in WERC7575ShareToken is not migrated (because it's stored in the old ShareToken instance), could this create a fragmented protocol state where old vaults use old constants and new vaults use new constants, allowing cross-vault exploits via share transfers between the two systems?SafeTokenTransfers.safeTransferFrom() (line 63) calls IERC20Metadata(token).safeTransferFrom() followed by a balance check. If the token implements ERC777 hooks (tokensReceived) or ERC1363 (onTransferReceived), can a malicious recipient reenter the calling vault contract during the safeTransferFrom() call but before the balance validation check, potentially manipulating state variables like $.pendingDepositAssets or $.totalPendingDepositAssets in ERC7575VaultUpgradeable.requestDeposit() to bypass accounting invariants?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_3e33d946-83a6-4de5-968c-8c12811edefe",
+    "timestamp": "2025-12-02 18:01:03.397500",
+    "report_generated": false
+  },
+  {
+    "question": "In SafeTokenTransfers.safeTransfer() (line 49), the library reads the recipient's balance before the transfer at line 50, then calls safeTransfer() at line 51, then reads the balance again at line 52. If the token contract has a callback hook that allows the recipient to call back into the vault during the transfer, could an attacker exploit the time-of-check-time-of-use (TOCTOU) window between the two balanceOf() calls to manipulate the balance validation and bypass the TransferAmountMismatch check?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_d4596297-f41a-4bd7-bd3c-d79348829270",
+    "timestamp": "2025-12-02 18:01:34.907758",
+    "report_generated": false
+  },
+  {
+    "question": "When SafeTokenTransfers.safeTransferFrom() is called from ERC7575VaultUpgradeable.requestDeposit() (line 361), the function is protected by nonReentrant modifier. However, if the asset token implements ERC777 with tokensToSend() hook on the sender side, can the owner trigger a reentrancy attack during the balance deduction phase (before the actual transfer) to call requestDeposit() again with the same assets, causing double-crediting in $.pendingDepositAssets before any revert occurs?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_5b61141a-3360-4824-a41b-62e235516927",
+    "timestamp": "2025-12-02 18:02:05.668535",
+    "report_generated": false
+  },
+  {
+    "question": "SafeTokenTransfers.safeTransfer() (line 49) performs a balance check after the transfer at line 52. If the asset token contract uses a proxied implementation that can be upgraded to include a malicious transferFrom() hook, could an attacker wait until after deployment, upgrade the token to add a callback that manipulates the vault's state during the balance check window, then exploit this to drain funds by manipulating $.claimableRedeemAssets or $.claimableDepositShares?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_ab56cbf0-91bc-47d8-9b17-012397d1fda0",
+    "timestamp": "2025-12-02 18:02:36.180155",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.claimDeposit() (line 915-916), SafeTokenTransfers.safeTransfer() is called AFTER burning shares and emitting the Withdraw event. If the asset token has a transfer callback that allows reentrancy, can an attacker reenter claimDeposit() during the transfer to claim the same assets multiple times before the balance check at line 53 of SafeTokenTransfers.sol completes, violating the no-double-claim invariant?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_3039315f-d006-4721-9aa0-ad749a059ef5",
+    "timestamp": "2025-12-02 18:03:08.528509",
+    "report_generated": false
+  },
+  {
+    "question": "SafeTokenTransfers.safeTransferFrom() (line 63) validates that balanceAfter == balanceBefore + amount at line 67. If the recipient address is a contract that implements a receive() or fallback() function which calls token.burn() on itself during the transfer callback, could the balance check pass (because burn reduces balance) while the vault's accounting assumes full amount was received, leading to an accounting mismatch where $.totalPendingDepositAssets exceeds actual held assets?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_d5da5700-11d4-4f29-838e-f4c03a682082",
+    "timestamp": "2025-12-02 18:03:38.676960",
+    "report_generated": false
+  },
+  {
+    "question": "In SafeTokenTransfers.safeTransfer() (line 49-54), the balance validation check assumes balanceAfter = balanceBefore + amount. If the asset token implements an automatic rebase mechanism (like Ampleforth) where balances change automatically between the two balanceOf() calls at lines 50 and 52, could a positive rebase cause the check to pass even if the actual transfer amount was less than requested, or could a negative rebase cause spurious TransferAmountMismatch reverts that DOS valid withdrawals?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_fa4c9703-a946-4b07-b4e8-2a0295cb7fc7",
+    "timestamp": "2025-12-02 18:04:08.393243",
+    "report_generated": false
   }
 ]
