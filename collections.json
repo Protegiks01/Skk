@@ -1348,5 +1348,155 @@
     "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_6ef7570f-2714-4133-849e-656eb92d6e0f",
     "timestamp": "2025-12-02 18:47:49.985208",
     "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.totalAssets(), if balance < reservedAssets, the function returns 0 (line 1179). Can this cause _convertToShares() to divide by zero or return incorrect conversion rates when totalAssets() is 0 but shares are circulating, leading to failed deposit/redeem operations or exploitable arbitrage?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_71cd7f66-8812-48d0-9cd7-dc1c200bc05e",
+    "timestamp": "2025-12-02 18:48:56.967204",
+    "report_generated": false
+  },
+  {
+    "question": "ERC7575VaultUpgradeable.totalAssets() does not include invested assets (assets deployed to investment vaults), as those are tracked at the ShareToken level (lines 1140-1172). If the investment manager invests most of the vault's assets, can totalAssets() become very small while actual protocol-wide assets are high, causing new deposit conversions to receive disproportionately many shares compared to earlier depositors?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_d4eb24c7-9c11-4d3b-b589-d961759f669c",
+    "timestamp": "2025-12-02 18:49:10.252005",
+    "report_generated": false
+  },
+  {
+    "question": "ERC7575VaultUpgradeable._convertToShares() (lines 1188-1196) normalizes assets to 18 decimals using scalingFactor and calls ShareTokenUpgradeable.convertNormalizedAssetsToShares(). If scalingFactor is incorrectly calculated in initialize() (lines 186-188) for assets with non-standard decimals, can this cause shares to be minted at wrong ratios, allowing an attacker to receive far more shares than their assets justify?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_1b6c11f7-e552-4a3b-8c19-d448232b4a78",
+    "timestamp": "2025-12-02 18:49:24.894714",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable._convertToAssets() (lines 1204-1216), the function calls ShareTokenUpgradeable.convertSharesToNormalizedAssets() and then denormalizes back to asset decimals (line 1214). If the scaling factor is 1 (assetDecimals == 18), the function returns normalizedAssets directly (line 1212). Can this bypass any rounding protections and cause precision loss in the conversion?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a8582177-2177-4e7d-bb96-31b19594ae42",
+    "timestamp": "2025-12-02 18:49:39.071163",
+    "report_generated": false
+  },
+  {
+    "question": "ERC7575VaultUpgradeable.convertToShares() and convertToAssets() are public view functions used for preview calculations. If an attacker repeatedly queries these functions with various input amounts to find rounding discrepancies, can they craft deposit/redeem amounts that maximize rounding errors in their favor, extracting value from other users?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_6a894034-900e-4b3f-a1ff-24639a479585",
+    "timestamp": "2025-12-02 18:49:54.169876",
+    "report_generated": false
+  },
+  {
+    "question": "ERC7575VaultUpgradeable.investAssets() (lines 1448-1465) approves the investment vault and deposits assets with ShareToken as receiver (line 1461). If the investment vault is malicious and does not return the expected shares or transfers them to the wrong address, can the ShareToken's investment balance be manipulated, affecting getInvestedAssets() calculations across the protocol?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_0e9ce3af-16b8-4910-ad8e-677b41ca381f",
+    "timestamp": "2025-12-02 18:50:10.494830",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.investAssets(), the function checks that amount <= totalAssets() (lines 1454-1457). However, totalAssets() already excludes reserved assets. If the investment manager tries to invest exactly totalAssets(), can this cause the vault to have insufficient assets to fulfill pending redemptions, trapping user funds?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_8032fe08-ec3e-4fc9-8c94-1d53abde0e24",
+    "timestamp": "2025-12-02 18:50:31.904411",
+    "report_generated": false
+  },
+  {
+    "question": "ERC7575VaultUpgradeable.withdrawFromInvestment() (lines 1477-1509) calculates shares using previewWithdraw() on the investment vault (line 1489) and caps at maxShares (line 1490). If the preview function returns a higher share amount than necessary, can the vault burn more investment shares than needed, causing a loss of invested assets?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_f31a1100-36fa-4436-a9f8-4412148797bd",
+    "timestamp": "2025-12-02 18:50:55.854070",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.withdrawFromInvestment(), the function checks for InvestmentSelfAllowanceMissing (lines 1494-1497). If the ShareToken does not have self-allowance on its investment ShareToken balance, can withdrawal attempts permanently fail, locking all invested assets in the investment vault?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_64df2ace-018e-4055-b2db-f45160d6d48b",
+    "timestamp": "2025-12-02 18:51:23.288310",
+    "report_generated": false
+  },
+  {
+    "question": "ERC7575VaultUpgradeable.investAssets() emits AssetsInvested event with shares received (line 1463). If the investment vault returns fewer shares than expected due to fees or slippage, but the event still emits the amount parameter, can off-chain systems tracking investments miscalculate the actual invested position?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_9e1f2aac-80e6-467e-8bce-fc1ad30fe90c",
+    "timestamp": "2025-12-02 18:51:53.130345",
+    "report_generated": false
+  },
+  {
+    "question": "ERC7575VaultUpgradeable.cancelDepositRequest() (lines 1574-1595) moves pendingDepositAssets to pendingCancelDepositAssets and adds controller to controllersWithPendingDepositCancelations set (line 1591). If the controller never calls claimCancelDepositRequest() to claim their canceled assets, can they remain in the pending cancelation set forever, permanently blocking new deposits for that controller?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_656db032-8207-4f2e-acd0-410b0636a162",
+    "timestamp": "2025-12-02 18:52:25.766212",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.cancelDepositRequest(), assets are moved from totalPendingDepositAssets to totalCancelDepositAssets (lines 1586-1588). Both are excluded in totalAssets() calculation. Can a user effectively 'hide' their assets from available investment by canceling their deposit request but never claiming the cancelation, reducing the vault's deployable capital?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_be14e934-5efb-40e6-9a2f-9cc1ef9e5035",
+    "timestamp": "2025-12-02 18:53:01.673917",
+    "report_generated": false
+  },
+  {
+    "question": "ERC7575VaultUpgradeable.fulfillCancelDepositRequest() (lines 994-1006) and fulfillCancelRedeemRequest() (lines 1081-1091) are callable only by investment manager. If the investment manager delays fulfilling cancelations for a long time, can users be locked out of their funds with no recourse since there are no time limits on fulfillment?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_c0391f17-6b25-4b3c-b144-41e2d6df458c",
+    "timestamp": "2025-12-02 18:53:40.686561",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.claimCancelDepositRequest() (lines 1691-1711), assets are transferred using SafeTokenTransfers.safeTransfer() (line 1707). If the asset token has a transfer hook that calls back into the vault, can an attacker re-enter and claim their canceled deposit multiple times before the state is finalized?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_d92ee5ae-bfef-43b6-b37b-bdb71caa1edc",
+    "timestamp": "2025-12-02 18:54:21.063324",
+    "report_generated": false
+  },
+  {
+    "question": "ERC7575VaultUpgradeable.cancelRedeemRequest() (lines 1745-1764) moves shares from pendingRedeemShares to pendingCancelRedeemShares but does not transfer shares anywhere (lines 1756-1757). If the shares remain in the vault's balance, can they be incorrectly counted in totalClaimableRedeemShares calculations, affecting circulating supply metrics?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_6d41c095-223e-4648-a943-dac8f68a93d5",
+    "timestamp": "2025-12-02 18:55:03.435312",
+    "report_generated": false
+  },
+  {
+    "question": "ERC7575VaultUpgradeable.getActiveDepositRequesters() (lines 1910-1916) returns all active deposit requester addresses. If the EnumerableSet contains more than 100 addresses, the function reverts with TooManyRequesters (lines 1912-1914). Can this cause off-chain monitoring tools to fail when trying to query active requesters, preventing visibility into pending deposits?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_59861c12-9302-45a8-b3ce-0dfbfa5608a0",
+    "timestamp": "2025-12-02 18:55:49.489543",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.getControllerStatus() (lines 1967-1977), the function returns a struct with all pending and claimable amounts for a controller. If the struct is used in external calls that have limited return data size, can the function fail for controllers with many simultaneous requests?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_5fe572ba-891f-42be-915a-ec3461b0bdbe",
+    "timestamp": "2025-12-02 18:56:35.207717",
+    "report_generated": false
+  },
+  {
+    "question": "ERC7575VaultUpgradeable.initialize() (lines 150-190) is protected by the initializer modifier. If the implementation contract is deployed and initialize() is not called immediately, can an attacker call initialize() on the implementation (not proxy) to set themselves as owner, potentially affecting future upgrades?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_91cbb5ba-5d70-44a9-aa4c-fefa2b4f8b56",
+    "timestamp": "2025-12-02 18:57:21.713275",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.initialize(), scalingFactor is calculated as 10^(18 - assetDecimals) and must fit in uint64 (lines 186-188). For assets with 6 decimals, scalingFactor = 10^12 which fits. But if this calculation ever overflows uint64, the function reverts with ScalingFactorTooLarge. Can this prevent legitimate vaults from being initialized for certain asset types?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_5827f28f-66af-42d8-8d73-32bec23b0ee4",
+    "timestamp": "2025-12-02 18:58:09.301259",
+    "report_generated": false
+  },
+  {
+    "question": "ERC7575VaultUpgradeable uses ERC-7201 namespaced storage with VAULT_STORAGE_SLOT = keccak256('erc7575.vault.storage') (line 84). If a future upgrade adds new storage variables outside the VaultStorage struct, can this cause storage collisions with the base Ownable2StepUpgradeable or Initializable slots, corrupting contract state?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_5f4c454d-116d-4e44-87ed-0180ac8c52f9",
+    "timestamp": "2025-12-02 18:58:58.929372",
+    "report_generated": false
+  },
+  {
+    "question": "ERC7575VaultUpgradeable.setOperator() (lines 264-271) delegates to ShareTokenUpgradeable.setOperatorFor() to preserve msg.sender context (line 267). If the ShareToken's setOperatorFor() has a bug that incorrectly records the controller, can this cause operator permissions to be assigned to the wrong user, allowing unauthorized async operations?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_5ebe2245-ddff-4e2e-a6c9-eedd0319e487",
+    "timestamp": "2025-12-02 18:59:49.403530",
+    "report_generated": false
+  },
+  {
+    "question": "In ERC7575VaultUpgradeable.isOperator() (lines 287-291), the function queries ShareTokenUpgradeable.isOperator() directly. If the ShareToken contract is upgraded and the operator storage layout changes, can this view function return stale or incorrect operator status, causing authorization checks to fail incorrectly?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_ab97c44d-ce70-43cd-80e1-84e73d054f2d",
+    "timestamp": "2025-12-02 19:00:40.490338",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575Vault.deposit() (lines 360-363) calls previewDeposit(assets) to calculate shares and then _deposit() to mint them. The _deposit() function checks isActive and reverts with VaultNotActive if the vault is paused (line 325). If the vault is paused between previewDeposit() and deposit(), can this cause user transactions to fail with incorrect error messages?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_c79fcdd0-a22a-4a33-86a1-047ce7ab27f1",
+    "timestamp": "2025-12-02 19:01:32.831304",
+    "report_generated": false
+  },
+  {
+    "question": "In WERC7575Vault._deposit() (lines 324-336), SafeTokenTransfers.safeTransferFrom() is called before minting shares (line 332). If the asset token is a non-standard ERC20 with reentrancy hooks, can an attacker call deposit() recursively and mint multiple sets of shares for the same asset transfer?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a089c0ce-df14-4afa-a736-d2c9f206ac16",
+    "timestamp": "2025-12-02 19:02:25.910713",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575Vault.mint() (lines 385-388) calls previewMint(shares) with Ceil rounding to calculate required assets (line 260). If the ceiling rounding causes the user to pay 1 wei more than the floor-rounded value, can repeated mint operations accumulate these rounding differences to extract value from users?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_ccfdf176-a167-43ed-85ee-3a42e99aa8bd",
+    "timestamp": "2025-12-02 19:03:18.910318",
+    "report_generated": false
   }
 ]
