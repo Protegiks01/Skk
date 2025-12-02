@@ -598,5 +598,155 @@
     "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_8b4d41de-ae27-4dfc-bdda-64f7d2a303c1",
     "timestamp": "2025-12-02 17:54:28.494913",
     "report_generated": false
+  },
+  {
+    "question": "In setOperatorFor() (line 525), the function is onlyVaults but doesn't restrict which controller can have operators set. If vault A calls setOperatorFor(userB, attackerC, true) where userB never interacted with vault A, could vault A grant unauthorized operator permissions to attackerC over userB's shares across all vaults, violating user consent?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_aa4b7480-2ee8-4795-9f89-1354549c1ccd",
+    "timestamp": "2025-12-02 17:55:46.075592",
+    "report_generated": false
+  },
+  {
+    "question": "The onlyVaults modifier (lines 127-131) checks $.vaultToAsset[msg.sender] != address(0). If through a storage collision bug in an upgrade, vaultToAsset mapping is corrupted and returns non-zero for arbitrary addresses, could non-vault addresses bypass the modifier and call mint(), burn(), spendAllowance(), or vaultTransferFrom() to manipulate shares arbitrarily?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_79054c54-1bdf-41dd-95ce-f235a78750b6",
+    "timestamp": "2025-12-02 17:55:59.550004",
+    "report_generated": false
+  },
+  {
+    "question": "The onlyOwner modifier is inherited from Ownable2StepUpgradeable. If during the two-step ownership transfer, the pending new owner calls acceptOwnership() and immediately transfers ownership again to a third address before the first transfer is complete, could this create a race condition where the wrong address becomes owner, gaining control over all vault registration and investment configuration?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_bd96a99c-7035-420c-8688-20fff5569dd7",
+    "timestamp": "2025-12-02 17:56:13.202822",
+    "report_generated": false
+  },
+  {
+    "question": "In registerVault(), if the same asset address is used across different chains (USDC on mainnet vs USDC on L2), and if the ShareToken is deployed on multiple chains with the same proxy address, could a replay attack during vault registration cause the wrong vault to be registered for an asset, routing user deposits to unintended vaults or chains?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_e0c7685a-b7d4-4277-a123-2e89f5ea26d7",
+    "timestamp": "2025-12-02 17:56:27.655154",
+    "report_generated": false
+  },
+  {
+    "question": "The multi-asset architecture allows different assets with different decimals (6 for USDC, 18 for DAI) to share one 18-decimal ShareToken. If vault A (USDC) has $1M in 6-decimal assets normalized to 1e18, and vault B (DAI) has $1M in 18-decimal assets also at 1e18, the getCirculatingSupplyAndAssets() treats them equally. Could exchange rate fluctuations between USDC and DAI cause the normalized values to diverge, creating arbitrage where users deposit into one asset and redeem from another to extract value?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_8bd8f589-1d9b-43f1-a127-294769e6bef2",
+    "timestamp": "2025-12-02 17:56:43.223157",
+    "report_generated": false
+  },
+  {
+    "question": "When a vault is unregistered (lines 282-327), its claimable shares are removed from future getCirculatingSupplyAndAssets() calculations. If users have unclaimed deposits or redemptions in that vault, could the circulating supply calculation become incorrect since those shares still exist in totalSupply() but are no longer counted in totalClaimableShares, causing inflated conversion ratios that disadvantage remaining users?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_cc92cb1e-7977-41bd-ba1c-515bdcfbfb36",
+    "timestamp": "2025-12-02 17:57:00.667638",
+    "report_generated": false
+  },
+  {
+    "question": "The getCirculatingSupplyAndAssets() function calculates totalClaimableShares by summing across all vaults (lines 374-381). If a malicious vault inflates its claimableShares to type(uint256).max, the addition on line 379 could overflow despite Solidity 0.8's overflow checks, or if the sum exceeds totalSupply, line 389 would cap circulatingSupply at 0, breaking conversion ratios for all vaults due to one malicious vault?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_358a279f-376a-4b89-9e3c-f310d0362e1b",
+    "timestamp": "2025-12-02 17:57:18.630716",
+    "report_generated": false
+  },
+  {
+    "question": "In setInvestmentManager() (lines 667-673), the function iterates through all vaults and calls setInvestmentManager() on each. If the iteration is interrupted mid-way due to gas limits or a reverting vault, would the entire transaction revert, leaving some vaults with the old manager and others with the new manager, creating fragmented investment control across the multi-asset system?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_e7201bd8-9593-4e9a-8afe-2e6fde6d9a0b",
+    "timestamp": "2025-12-02 17:57:39.181064",
+    "report_generated": false
+  },
+  {
+    "question": "In getCirculatingSupplyAndAssets() (line 384), invested assets are added to totalNormalizedAssets. If the investment layer has a different decimal precision or uses a different price calculation for the same underlying asset, could this create an inconsistent valuation where invested assets are counted at a different rate than vault assets, skewing conversion ratios in favor of early or late depositors?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_75658454-f9c7-41f3-b174-270e3d0d3206",
+    "timestamp": "2025-12-02 17:58:00.456039",
+    "report_generated": false
+  },
+  {
+    "question": "The investment configuration automatically grants type(uint256).max approval (line 549) to each vault. If a vault is later found to have a vulnerability that allows arbitrary token transfers, could an attacker drain the entire investment ShareToken balance from the settlement ShareToken, affecting all users across all vaults since investments are centralized at the ShareToken level?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_491f0359-078f-469a-9804-9d75f9a93007",
+    "timestamp": "2025-12-02 17:58:24.456021",
+    "report_generated": false
+  },
+  {
+    "question": "In registerVault(), when investment manager is already configured (lines 229-232), the function calls vault.setInvestmentManager(). If this call reverts because the vault hasn't fully initialized or has conflicting access control, could the entire registerVault() transaction fail, making it impossible to register new vaults once an investment manager is set, requiring the owner to remove and re-add the manager?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_fe3793ee-d9d0-432b-8c4b-c2968e56a84e",
+    "timestamp": "2025-12-02 17:58:48.947217",
+    "report_generated": false
+  },
+  {
+    "question": "The setInvestmentShareToken() function (line 577) sets $.investmentShareToken but doesn't verify that the investment ShareToken is actually a contract or implements required interfaces. If the owner accidentally sets a regular ERC20 token or an EOA address, subsequent calls to balanceOf() might succeed but rBalanceOf() would always fail, causing permanent undercounting of investment assets in conversion calculations?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_84164cd7-8f0e-4d9f-93d2-11c1d95e3fac",
+    "timestamp": "2025-12-02 17:59:14.155089",
+    "report_generated": false
+  },
+  {
+    "question": "In _calculateInvestmentAssets() (lines 612-616), the function uses a try-catch for rBalanceOf() and silently continues if it reverts. If the investment ShareToken's rBalanceOf() always reverts due to a bug, the calculation would systematically undercount invested assets. Could this cause conversion ratios to be understated, allowing late depositors to get more shares per asset than fair value, extracting value from existing shareholders?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_12ed4200-8d90-49be-9bfc-92469e158129",
+    "timestamp": "2025-12-02 17:59:40.444411",
+    "report_generated": false
+  },
+  {
+    "question": "The supportsInterface() function (lines 798-800) checks for IERC7575ShareExtended, IERC7540Operator, and IERC165 interfaces. If a caller relies on interface detection to determine if the contract supports a specific function and the interface definition changes in a future EIP update, could callers incorrectly assume functionality exists or doesn't exist, leading to failed integrations or security assumptions?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_e7750964-57f7-4e53-ac69-ab46ca64a4d4",
+    "timestamp": "2025-12-02 18:00:09.147731",
+    "report_generated": false
+  },
+  {
+    "question": "In registerVault(), if the vault's share() function (line 203) returns a different address than address(this) but passes the check due to a bug, the vault could be registered but shares would be minted to a different ShareToken. Could this cause users who deposit into this vault to receive shares in a different token than expected, leading to fund loss when they try to redeem?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a081d2dd-6b79-4cc6-af36-1f07602b0ae2",
+    "timestamp": "2025-12-02 18:00:36.863240",
+    "report_generated": false
+  },
+  {
+    "question": "The vaultTransferFrom() function (lines 749-760) doesn't emit a Transfer event since it's calling internal _transfer(). If external systems (block explorers, indexers) rely on Transfer events to track share movements, could vault-initiated transfers via vaultTransferFrom() be invisible to these systems, causing discrepancies between on-chain balances and off-chain indexed data?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_bac8a52d-a35b-4622-8a88-c2268f7c562e",
+    "timestamp": "2025-12-02 18:01:05.118105",
+    "report_generated": false
+  },
+  {
+    "question": "In getCirculatingSupplyAndAssets(), if all vaults have zero claimable shares and zero normalized assets, but totalSupply() > 0 due to previously minted shares that are now in user wallets, the conversion ratio would be based entirely on VIRTUAL_SHARES and VIRTUAL_ASSETS. Could this create a scenario where existing shareholders have shares with zero backing value, unable to redeem for any assets?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_4303918d-d95f-4877-88c9-40044596a6a3",
+    "timestamp": "2025-12-02 18:01:35.095257",
+    "report_generated": false
+  },
+  {
+    "question": "The initialize() function can only be called once due to the 'initializer' modifier. If the initial owner parameter is set to an address that immediately loses access (e.g., a hardware wallet that's lost), could the entire ShareToken system become permanently ownerless, unable to register vaults, set investment configurations, or perform upgrades, effectively bricking the protocol?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_0c8da11b-3a02-4c52-aad9-ffa6526a9795",
+    "timestamp": "2025-12-02 18:02:05.840444",
+    "report_generated": false
+  },
+  {
+    "question": "In _configureVaultInvestmentSettings() (line 545), if investmentVaultAddress is returned as address(0) (no matching investment vault for this asset), the function silently returns without configuring investment. If the protocol later adds an investment vault for that asset, could the original vault miss the configuration, requiring manual intervention to enable investment for that vault while others are automatically invested?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_cb16f606-e903-4660-a964-01e6c0889393",
+    "timestamp": "2025-12-02 18:02:38.684453",
+    "report_generated": false
+  },
+  {
+    "question": "The setOperator() function allows operator == address(0) as long as it's not equal to msg.sender. If a user accidentally calls setOperator(address(0), true), could this grant universal operator permissions to the zero address, and if any vault or system component defaults to address(0) for missing operator addresses, could this enable unauthorized operations?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_d3955f2a-2eac-4eea-adf0-23d0c71bd416",
+    "timestamp": "2025-12-02 18:03:09.534529",
+    "report_generated": false
+  },
+  {
+    "question": "In unregisterVault(), the function checks metrics.isActive == false (line 294). If a vault owner can toggle isActive on and off at will, could they block unregistration indefinitely by setting isActive = true whenever the ShareToken owner attempts to unregister, creating a griefing attack that prevents protocol maintenance?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a29f30d8-3716-4af0-b93e-ada6feea5c8f",
+    "timestamp": "2025-12-02 18:03:41.310773",
+    "report_generated": false
+  },
+  {
+    "question": "The convertNormalizedAssetsToShares() function adds VIRTUAL_ASSETS (1e6) to the denominator. If totalNormalizedAssets from all vaults is extremely small (e.g., 1 wei) due to mass withdrawals, the calculation becomes Math.mulDiv(normalizedAssets, circulatingSupply + 1e6, 1 + 1e6, rounding), heavily skewed by virtual amounts. Could this cause massive conversion errors where users receive 1e6x fewer shares than expected for small deposits?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_7589b8ae-c3a9-4eca-8847-151df58c2845",
+    "timestamp": "2025-12-02 18:04:12.470595",
+    "report_generated": false
+  },
+  {
+    "question": "In registerVault(), if MAX_VAULTS_PER_SHARE_TOKEN is 10 and exactly 10 vaults are registered, the length check (line 210) would block new registrations. If one vault needs to be replaced, the owner must unregister first (requiring perfect vault state: no pending, no assets, no active users). Could a protocol upgrade requiring new vaults be blocked if old vaults are 'stuck' in active state, effectively bricking the ability to add new asset types?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_486391d8-8a00-4333-8a19-8b940bfb259f",
+    "timestamp": "2025-12-02 18:04:43.807203",
+    "report_generated": false
+  },
+  {
+    "question": "The getCirculatingSupplyAndAssets() function is a view function but makes multiple external calls to vault contracts (line 378). If any vault's getClaimableSharesAndNormalizedAssets() function is not properly marked as view/pure and actually modifies state or calls back into ShareToken, could this violate the view function guarantee and cause unexpected state changes during what should be read-only operations?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_df012338-4ec7-4983-a7e4-f47e3a075faa",
+    "timestamp": "2025-12-02 18:05:14.037961",
+    "report_generated": false
+  },
+  {
+    "question": "In _calculateInvestmentAssets() (lines 603-620), the function calls IERC20(investmentShareToken).balanceOf(address(this)) and IWERC7575ShareToken(investmentShareToken).rBalanceOf(address(this)). If the investment ShareToken has transfer hooks in its balanceOf() getter (unconventional but possible with malicious tokens), could this trigger reentrancy that manipulates totalNormalizedAssets during conversion calculations?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_872e885d-0ab7-4bae-91f5-428a7aec97da",
+    "timestamp": "2025-12-02 18:05:43.141547",
+    "report_generated": false
   }
 ]
