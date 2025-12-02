@@ -1348,5 +1348,155 @@
     "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_f13e9c97-671e-45c8-94db-1b58433328dd",
     "timestamp": "2025-12-02 18:51:15.610866",
     "report_generated": false
+  },
+  {
+    "question": "In WERC7575ShareToken.permit() (lines 396-429), when owner == spender (self-approval), the function requires the signer to be the validator (lines 419-422), not the owner. However, the nonce is still consumed from the owner's nonce counter via _useNonce(owner) (line 401). Can a malicious validator who controls the validator private key generate permit signatures for any user's self-allowance without the user's consent, by signing permit(user, user, amount, deadline, v, r, s) and spending the user's nonce? This would allow the validator to grant self-allowances to any user, enabling those users to transfer tokens they shouldn't be able to move. While the validator is trusted, if the validator key is compromised or if there's a bug in validator signature generation, can this be exploited?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_b44f7a63-9c76-467a-b933-a6529da0b4e7",
+    "timestamp": "2025-12-02 18:52:25.147638",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575ShareToken.permit() (lines 396-429) validates EIP-712 signatures using ECDSA.recover() and checks the recovered address matches the owner. The function uses _domainSeparatorV4() (line 416) which includes block.chainid in the domain separator. However, if the contract is deployed on multiple chains (mainnet, Polygon, etc.) with the same address, and a user signs a permit on chain A, can an attacker observe the signature and replay it on chain B before the user submits it there? While _domainSeparatorV4() includes chainid, if the contract doesn't verify block.chainid matches the cached value in _domainSeparatorV4(), could a chain fork or reorg enable replay attacks?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_0058c971-8946-4862-8ea2-19d3c741a055",
+    "timestamp": "2025-12-02 18:52:38.697548",
+    "report_generated": false
+  },
+  {
+    "question": "In WERC7575ShareToken._update() (lines 519-547), the internal transfer function updates _balances for minting, burning, and transfers, emitting Transfer events. However, _rBalances are never touched in _update(). If a vault calls mint() (lines 363-369) to mint shares to a user, does the new _balances increase while _rBalances remains 0? If the user then participates in rBatchTransfers() where their account should have rBalance tracking, can the lack of initialization cause accounting errors? Specifically, if Alice receives 1000 newly minted shares (rBalance=0), then is debited 500 in rBatchTransfers() with rBalance flag set, does her rBalance become 500 while balance becomes 500, making 100% of her balance restricted when it should be 50%?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_ec704353-5bfa-4cc6-8a08-2b32a59ae00d",
+    "timestamp": "2025-12-02 18:52:52.477563",
+    "report_generated": false
+  },
+  {
+    "question": "In WERC7575ShareToken.adjustrBalance() (lines 1435-1471), the revenue admin adjusts _rBalances directly based on investment returns (amounti vs amountr). Lines 1451-1455 increase _rBalances if amountr > amounti (profit), and lines 1456-1468 decrease _rBalances if amountr < amounti (loss). However, these adjustments happen independently of _balances updates. If a user has _balances=100, _rBalances=50, and the revenue admin calls adjustrBalance() to increase _rBalances by 60 (lines 1453-1455), does this create _rBalances=110 while _balances=100, violating the invariant that rBalance is a 'portion' of balance? Can this corruption enable the user to have more restricted balance than total balance?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_06168a9d-a0cb-414f-84f3-b778700cc486",
+    "timestamp": "2025-12-02 18:53:07.569557",
+    "report_generated": false
+  },
+  {
+    "question": "The WERC7575ShareToken contract tracks both _balances (line 125) and _rBalances (line 126) as separate mappings. The batchTransfers() function (lines 700-734) only updates _balances without touching _rBalances, while rBatchTransfers() (lines 1119-1202) updates both. If the validator accidentally calls batchTransfers() when they should call rBatchTransfers() for accounts with active rBalances, does this create a desynchronization where _balances change but _rBalances remain stale? Can users exploit this by triggering batch transfers that should decrease their rBalance (to free restricted funds) but the validator uses the wrong function, allowing them to transfer restricted amounts?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_847f862b-9964-4c57-a182-bc3636f8ec21",
+    "timestamp": "2025-12-02 18:53:25.157360",
+    "report_generated": false
+  },
+  {
+    "question": "In WERC7575ShareToken.rBatchTransfers() (lines 1155-1180), when an account is a net creditor (credit > debit), the function increases _balances and conditionally decreases _rBalances with a floor at 0 (lines 1170-1178). If _rBalances[account] < amount, it sets _rBalances to 0 instead of reverting. Can a malicious validator exploit this silent capping behavior to intentionally zero out rBalances for accounts that should maintain non-zero restricted balances, effectively 'freeing' restricted funds that should remain locked? For example, if Alice has _balances=1000, _rBalances=500 (500 restricted), and the validator credits Alice 600 with rBalance flag set, does this incorrectly zero _rBalances, allowing Alice to transfer all 1000 when only 500 should be transferable?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_7a35612c-7637-411c-b035-8c8a8837eedb",
+    "timestamp": "2025-12-02 18:53:46.241254",
+    "report_generated": false
+  },
+  {
+    "question": "In WERC7575ShareToken.rBatchTransfers() (lines 1132-1154), when an account is a net debtor (debit > credit), the function decreases _balances and conditionally increases _rBalances if ((rBalanceFlags >> i) & 1) == 1. However, line 1152 performs _rBalances[account.owner] += amount in an unchecked block. If the rBalance adjustment causes _rBalances[account] to exceed _balances[account], does this violate the semantic invariant that _rBalances represents a 'restricted portion' of _balances? Can an attacker use this to create a state where rBalance > balance, breaking downstream logic that assumes rBalance <= balance?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_aadb6c8c-47ff-485f-b82d-d9a6fa204027",
+    "timestamp": "2025-12-02 18:54:10.032410",
+    "report_generated": false
+  },
+  {
+    "question": "The WERC7575ShareToken.consolidateTransfers() function (lines 1023-1060) uses unchecked arithmetic when accumulating debits/credits: 'accounts[j].debit += amount' and 'accounts[j].credit += amount' (lines 1036, 1040). If a malicious validator submits batch transfers with carefully chosen amounts that cause uint256 overflow in the debit or credit accumulation for a specific account, can this overflow be exploited to make (debit - credit) calculations incorrect, bypassing balance checks and creating tokens? For example, if Alice is debited uint256.max, then credited 1, does debit overflow cause (debit - credit) to compute incorrectly?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_b2acf983-9c87-4309-b2d0-e99804bcf448",
+    "timestamp": "2025-12-02 18:54:35.013697",
+    "report_generated": false
+  },
+  {
+    "question": "In WERC7575ShareToken.rBatchTransfers() (lines 1119-1202), the function performs the same consolidation as batchTransfers() but additionally updates _rBalances based on rBalanceFlags bitmap. If an attacker crafts batch transfers with non-zero-sum debits/credits, can they exploit the rBalance adjustment logic to create accounting mismatches between _balances and _rBalances? Specifically, if net balance change != 0, the rBalance adjustments (lines 1147-1153 for debits, 1166-1179 for credits) might not preserve the invariant that _rBalances[account] represents restricted portion of _balances[account].",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_7e29592c-0052-4463-8305-c146d0af7307",
+    "timestamp": "2025-12-02 18:55:01.274910",
+    "report_generated": false
+  },
+  {
+    "question": "In WERC7575ShareToken.batchTransfers() (lines 704-723), after consolidation, accounts with (debit > credit) decrease their _balances by (debit - credit), while accounts with (credit > debit) increase _balances by (credit - debit). If the input arrays are malformed such that sum(all account decreases) != sum(all account increases), does this silently corrupt totalSupply? For example, if debtors=[Alice, Bob] amounts=[100,50] but creditors=[Charlie, Charlie] (duplicate), does Charlie receive 150 while Alice+Bob only lose 150, or is there an edge case where totalSupply diverges from sum(_balances)?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a055a155-5672-49da-a628-6dc57fa4011a",
+    "timestamp": "2025-12-02 18:55:29.013692",
+    "report_generated": false
+  },
+  {
+    "question": "In WERC7575ShareToken.consolidateTransfers() (lines 1006-1062), when aggregating multiple transfers into DebitAndCredit structs, the function accumulates account.debit and account.credit independently without checking if sum(all debits) equals sum(all credits) across the entire batch. If a malicious validator submits arrays where total debits != total credits (e.g., 3 debtors of 100 each, 2 creditors of 150 each = net +300 to supply), can this bypass create phantom tokens or destroy existing tokens, breaking the Token Supply Conservation invariant?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_82816bcc-a8c0-43aa-bb2c-4f688a6e7161",
+    "timestamp": "2025-12-02 18:55:59.077675",
+    "report_generated": false
+  },
+  {
+    "question": "In WERC7575ShareToken.batchTransfers() (lines 700-734), the function consolidates transfers using consolidateTransfers() and updates _balances directly without verifying that sum(debits) == sum(credits) across all accounts. Can an attacker exploit this missing zero-sum validation by crafting batch transfers where the validator accidentally approves unbalanced arrays (e.g., debtors=[A,B], creditors=[C], amounts=[100,50]) to mint tokens out of thin air, violating the totalSupply conservation invariant?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_0431e0e5-b598-4db3-88a0-bcabae5793d7",
+    "timestamp": "2025-12-02 18:56:31.879214",
+    "report_generated": false
+  },
+  {
+    "question": "ShareTokenUpgradeable.unregisterVault() removes the vault from assetToVault and vaultToAsset mappings (lines 323-324). If the vault has pending async operations that complete after unregist",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_d3c4af06-ea51-4ba1-bce1-f1653b73eba8",
+    "timestamp": "2025-12-02 18:57:05.812824",
+    "report_generated": false
+  },
+  {
+    "question": "In ShareTokenUpgradeable.unregisterVault(), the function checks asset.balanceOf(vaultAddress) == 0 (line 318). If assets are accidentally sent to the vault address after all user operations are complete, can this prevent unregistration permanently despite no user funds being at risk?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_51c2144e-ded5-4b53-85ca-de328b10c1be",
+    "timestamp": "2025-12-02 18:57:42.110619",
+    "report_generated": false
+  },
+  {
+    "question": "ShareTokenUpgradeable.unregisterVault() (lines 282-327) checks vault metrics to ensure no pending requests exist (lines 293-309). If a malicious vault implements getVaultMetrics() to always return non-zero values, can this permanently prevent unregistration of the vault, locking it in the registry?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_e2b8df12-06ab-4942-b8e5-d940a37f2f39",
+    "timestamp": "2025-12-02 18:58:16.411345",
+    "report_generated": false
+  },
+  {
+    "question": "ShareTokenUpgradeable.registerVault() enforces MAX_VAULTS_PER_SHARE_TOKEN = 10 (lines 210-212). If an attacker registers 10 dummy vaults with minimal assets to fill the slots, can they prevent the owner from registering legitimate vaults, effectively DOSing the multi-asset system?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_1c74d2bb-dace-4565-93d8-d3211a6a4f6f",
+    "timestamp": "2025-12-02 18:58:51.446434",
+    "report_generated": false
+  },
+  {
+    "question": "In ShareTokenUpgradeable.registerVault(), if investmentShareToken is already configured, the function automatically calls _configureVaultInvestmentSettings() (lines 222-225). If this configuration call fails due to a bug in the investment vault, does the entire registration transaction revert, preventing the vault from being registered at all?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_54236a15-f89f-47e0-813a-783c6cc5f7b4",
+    "timestamp": "2025-12-02 18:59:27.417266",
+    "report_generated": false
+  },
+  {
+    "question": "ShareTokenUpgradeable.registerVault() (lines 195-234) validates that vault.asset() == asset (line 200) and vault.share() == this (line 203). If a malicious vault implements these functions as view functions that return correct values during registration but change behavior afterward via delegatecall or storage manipulation, can the vault bypass validation checks?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_25849eaa-0689-4c20-ad37-2c4786a0d538",
+    "timestamp": "2025-12-02 19:00:03.321799",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575Vault.maxWithdraw() (lines 305-307) calls _convertToAssets(_shareToken.balanceOf(owner)) to calculate the maximum withdrawable assets. If the conversion uses Floor rounding, can the returned value be slightly less than the owner's actual withdrawable amount, causing confusion for integrators?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_2e990957-6004-4585-9590-6d25de1b6d7b",
+    "timestamp": "2025-12-02 19:00:40.450342",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575Vault.maxDeposit() returns type(uint256).max (line 287), indicating unlimited deposits. If the vault has reserved assets that limit available capacity, can users call deposit() with maxDeposit() amounts and cause unexpected reverts because totalAssets() constraints are exceeded?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_fcae0d39-4437-4d4a-8f7f-3f025918366c",
+    "timestamp": "2025-12-02 19:01:18.551809",
+    "report_generated": false
+  },
+  {
+    "question": "In WERC7575Vault constructor, the vault is set to active by default (_isActive = true, line 112). If the owner forgets to register the vault in the ShareToken's registerVault() before users try to interact with it, can deposits succeed but fail during minting because the vault is not authorized?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_4aa22fef-d853-4d1d-87b0-e7d298d0e0cd",
+    "timestamp": "2025-12-02 19:01:54.147380",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575Vault constructor calculates scalingFactor as 10^(18 - assetDecimals) (line 107) and checks it fits in uint64 (line 108). For 6-decimal assets, scalingFactor = 10^12 = 1,000,000,000,000 which fits. Can this constraint ever be violated for assets within the supported decimal range, or is the check redundant?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_f638d3d3-7e74-42a3-8922-c549b0e667f7",
+    "timestamp": "2025-12-02 19:02:30.064989",
+    "report_generated": false
+  },
+  {
+    "question": "In WERC7575Vault constructor, shareToken.decimals() is checked to be exactly 18 (lines 101-103). If the ShareToken is upgraded to support different decimal configurations, can newly deployed vaults fail to initialize because the decimal check becomes outdated?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_fbc262eb-1f08-430c-9b2b-33cc856dd7bf",
+    "timestamp": "2025-12-02 19:03:05.873684",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575Vault constructor (lines 88-116) validates that asset decimals are between MIN_ASSET_DECIMALS (6) and SHARE_TOKEN_DECIMALS (18). If an asset with 5 decimals is deployed, the constructor reverts with UnsupportedAssetDecimals. Can this permanently prevent vault deployment for legitimate assets that don't fit the decimal range?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_3d6aec4a-5e59-458b-953f-1fc2290234bb",
+    "timestamp": "2025-12-02 19:03:43.152433",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575Vault.previewWithdraw() uses Ceil rounding (line 268) to calculate required shares. If the vault has insufficient shares in circulation to satisfy a withdrawal request, can the ceiling rounding cause the required shares to exceed the owner's balance, preventing legitimate withdrawals?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_9a354be9-055e-4559-82c9-29e30db1a9f8",
+    "timestamp": "2025-12-02 19:04:20.976553",
+    "report_generated": false
   }
 ]
