@@ -1048,5 +1048,155 @@
     "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_babe00bd-8f30-41d3-a078-799813e81b9c",
     "timestamp": "2025-12-02 18:25:19.233777",
     "report_generated": false
+  },
+  {
+    "question": "In WERC7575ShareToken.permit(), if the deadline parameter is set to type(uint256).max, the signature remains valid indefinitely. Can an attacker who obtains a validator-signed permit signature (e.g., from a compromised database or social engineering) use it months later to grant self-allowance even after the original authorization context has expired?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_5e36b51f-c49d-403b-9608-cb509e654a55",
+    "timestamp": "2025-12-02 18:26:29.370066",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575ShareToken.transfer() requires _spendAllowance(from, from, value) for self-allowance before transferring. If a user has self-allowance but their KYC status is revoked between the allowance check and the actual transfer, can they bypass KYC enforcement by exploiting the order of checks in the transfer() function?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_5fa0afaf-9724-4ac5-812e-008900ba230c",
+    "timestamp": "2025-12-02 18:26:42.713061",
+    "report_generated": false
+  },
+  {
+    "question": "In WERC7575ShareToken.transferFrom() (lines 488-492), the function spends self-allowance from the 'from' address: _spendAllowance(from, from, value). If 'from' has insufficient self-allowance but msg.sender has sufficient allowance[from][msg.sender], will the transaction revert before checking the caller's allowance, or can an attacker exploit this to manipulate the order of allowance deductions?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_239a7b7f-f785-4842-96d4-f6dfbc0a3759",
+    "timestamp": "2025-12-02 18:26:57.123764",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575ShareToken.approve() blocks self-approval (msg.sender == spender) and reverts with ERC20InvalidSpender. If a user accidentally tries to self-approve through a smart contract wallet that batch-calls approve(), can this cause the entire batch transaction to revert, leading to a DOS scenario where legitimate approvals cannot be set?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_3541a8b8-871a-49c6-b570-502df731f634",
+    "timestamp": "2025-12-02 18:27:12.691631",
+    "report_generated": false
+  },
+  {
+    "question": "In WERC7575ShareToken.batchTransfers() (lines 700-734), the function uses consolidateTransfers() to net debits and credits per account before updating _balances. If an attacker submits a batch where the same account appears as both debtor and creditor with amounts that net to zero, but the gross debit exceeds their balance, can they bypass the LowBalance check and manipulate other accounts' balances through the netting logic?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_252ef743-b524-4607-981f-ef2c2363d581",
+    "timestamp": "2025-12-02 18:27:29.658718",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575ShareToken.batchTransfers() emits Transfer events for the original transfers (lines 726-731), not the consolidated net transfers. If the consolidation logic in consolidateTransfers() contains a bug that miscalculates net amounts, can an attacker exploit the mismatch between emitted events and actual balance changes to confuse off-chain indexers and create phantom balances?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_c508f476-1ee8-4dde-9892-4991d73891d6",
+    "timestamp": "2025-12-02 18:27:49.206385",
+    "report_generated": false
+  },
+  {
+    "question": "In WERC7575ShareToken.consolidateTransfers() (lines 1006-1062), self-transfers are skipped (debtor == creditor). If an attacker includes self-transfers in a batch to inflate the apparent transfer count while consuming minimal gas, can they use this to exceed the MAX_BATCH_SIZE limit without actually processing 100 meaningful transfers, potentially bypassing batch size restrictions?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_d2acd05d-6356-43e9-9f90-559563d0561c",
+    "timestamp": "2025-12-02 18:28:09.777113",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575ShareToken.batchTransfers() does not use nonReentrant modifier, relying on the fact that it makes no external calls. However, if the _balances mapping update (lines 704-718) is not atomic and another validator can call batchTransfers() simultaneously, can race conditions between concurrent batch operations corrupt account balances or violate the zero-sum invariant?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_791fad17-6709-414d-a40d-997e406b1ad2",
+    "timestamp": "2025-12-02 18:28:31.287356",
+    "report_generated": false
+  },
+  {
+    "question": "In WERC7575ShareToken.batchTransfers(), the consolidateTransfers() function aggregates accounts using a nested loop (O(N²) complexity). If the validator submits exactly 100 transfers with 200 unique addresses (worst case: no overlap between debtors and creditors), can the gas consumption exceed block limits and cause the transaction to revert, effectively DOSing batch settlement operations?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_55e3e974-2440-4cda-adb4-32a60975f041",
+    "timestamp": "2025-12-02 18:28:54.957322",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575ShareToken.batchTransfers() checks debtorBalance < amount and reverts with LowBalance (line 709). If the batch contains transfers that reduce an account's balance in early transfers and then try to debit from the same account later in the batch, will the later debit fail because the earlier deductions already reduced the balance below the required amount?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_3e51c627-9fd8-4ca5-a664-2d049c694203",
+    "timestamp": "2025-12-02 18:29:17.655473",
+    "report_generated": false
+  },
+  {
+    "question": "In WERC7575ShareToken.rBatchTransfers() (lines 1119-1202), the function updates _rBalances based on rBalanceFlags bitmap. If the computeRBalanceFlags() function (lines 802-963) returns incorrect flags due to account aggregation order mismatch, can an attacker cause _rBalances to be updated for the wrong accounts, leading to incorrect investment tracking and potential profit/loss misattribution?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_8b0b510a-3c15-4b67-8099-e506c7e36b72",
+    "timestamp": "2025-12-02 18:29:40.385648",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575ShareToken.rBatchTransfers() updates _rBalances for debtors by adding the net debit (lines 1148-1153) and for creditors by subtracting the net credit (lines 1166-1178). If an account's _rBalances[account] is less than the credit amount, it gets capped at 0 (lines 1170-1177). Can an attacker exploit this capping behavior to manipulate rBalance tracking by repeatedly crediting and debiting the same account in different batches?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_f73d371c-8417-4fbc-bf54-2359ca40fdbe",
+    "timestamp": "2025-12-02 18:30:03.973298",
+    "report_generated": false
+  },
+  {
+    "question": "In WERC7575ShareToken.computeRBalanceFlags() (lines 802-963), if an account appears in multiple transfers with inconsistent rBalance flags (e.g., marked for update in transfer 0 but not in transfer 5), the function reverts with InconsistentRAccounts (lines 892-893, 916-917). Can an attacker cause legitimate batch operations to fail by intentionally submitting inconsistent flags, effectively DOSing the rBatchTransfers functionality?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_18456bfe-d6cc-42bd-95a8-68b705497db5",
+    "timestamp": "2025-12-02 18:30:29.762311",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575ShareToken.rBatchTransfers() uses rBalanceFlags as a bitmap where bit i corresponds to accounts[i] in the consolidated array. If the validator accidentally provides rBalanceFlags computed for a different set of transfers (wrong debtors/creditors/amounts), can this cause _rBalances to be updated for entirely different accounts than intended, corrupting investment tracking across the protocol?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_9130671e-e5c6-4547-a560-a5c3a7403f14",
+    "timestamp": "2025-12-02 18:30:56.616816",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575ShareToken.adjustrBalance() (lines 1435-1471) allows the revenue admin to adjust _rBalances based on investment performance. If amountr > amounti (profit case), _rBalances[account] increases without any corresponding increase in _balances[account]. Can this create a scenario where sum(_rBalances) > sum(_balances), violating the invariant that rBalance tracks a subset of actual balances?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_cb426a85-466b-4538-9be5-31d2106e24e0",
+    "timestamp": "2025-12-02 18:31:24.985420",
+    "report_generated": false
+  },
+  {
+    "question": "In WERC7575ShareToken.adjustrBalance(), if amountr < amounti (loss case) and _rBalances[account] < difference, the function reverts with RBalanceAdjustmentTooLarge (lines 1459-1463). However, if the revenue admin applies multiple small adjustments that cumulatively exceed the available rBalance, can they work around this check by breaking a large loss into smaller increments?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_e84f25ff-c441-45c1-a579-e26751edd842",
+    "timestamp": "2025-12-02 18:31:53.684508",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575ShareToken.adjustrBalance() stores adjustments in _rBalanceAdjustments[account][ts] and checks if [ts][0] != 0 to prevent duplicate adjustments (lines 1436-1438). If the revenue admin accidentally uses the same timestamp for different accounts, can this cause the second adjustment to revert even though it's for a different account, potentially blocking legitimate rBalance updates?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_78b8e98f-2505-4bdc-b7b9-784514f2f3d6",
+    "timestamp": "2025-12-02 18:32:23.215707",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575ShareToken.cancelrBalanceAdjustment() (lines 1485-1514) reverses a previous adjustment by applying the opposite operation. If an adjustment has already been partially offset by subsequent batch transfers that modified _rBalances[account], can canceling the adjustment create an inconsistent state where the rBalance no longer reflects the actual investment position?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_a1f6bff0-5432-4b96-b99b-5d4013ddc16f",
+    "timestamp": "2025-12-02 18:32:53.332190",
+    "report_generated": false
+  },
+  {
+    "question": "In WERC7575ShareToken.adjustrBalance(), if amounti > type(uint256).max / MAX_RETURN_MULTIPLIER, the function reverts with AmountTooLarge (lines 1442-1444). However, if the revenue admin makes multiple sequential adjustments with slightly smaller amounts that collectively exceed the safe limit, can they bypass this overflow protection and cause amountr calculation to overflow when summed across all adjustments?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_8dcb26df-5aba-44ee-866b-b14f934f8182",
+    "timestamp": "2025-12-02 18:33:22.487354",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575ShareToken.mint() checks isKycVerified[to] before minting (line 367). If the KYC admin revokes a user's KYC status after they have already received shares through minting but before they can transfer them, will the shares become permanently locked in their account since transfer() also requires KYC verification for the recipient?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_938eb031-4916-4804-9139-fd32af769c91",
+    "timestamp": "2025-12-02 18:33:52.440029",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575ShareToken.burn() checks isKycVerified[from] before burning (line 380). If a user's KYC status is revoked, can they still call redeem operations through vaults that would trigger burn(), or will the burn fail and prevent them from exiting their position entirely, leading to permanent fund lock?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_205db12b-a249-45cd-8fd2-a16a72e5ba7e",
+    "timestamp": "2025-12-02 18:34:21.516250",
+    "report_generated": false
+  },
+  {
+    "question": "In WERC7575ShareToken.transfer() and transferFrom() (lines 472-492), KYC is checked for the 'to' address but not explicitly re-checked for the 'from' address. If a user's KYC status is revoked, can they still call transfer() to send their shares to a KYC-verified recipient, potentially violating the intent that non-KYC users should have no token operations?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_fd26d6a7-e092-4f37-87ad-4fba3200a6b0",
+    "timestamp": "2025-12-02 18:34:50.838095",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575ShareToken.setKycVerified() only emits an event if the status actually changes (lines 298-300). If the KYC admin calls setKycVerified(user, true) multiple times, only the first call emits an event. Can this event deduplication cause off-chain systems to miss re-verification events if they rely on event counts to track KYC renewal frequency?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_af784dbb-c2ad-4193-871b-73623d6044e0",
+    "timestamp": "2025-12-02 18:35:19.934157",
+    "report_generated": false
+  },
+  {
+    "question": "WERC7575ShareToken.registerVault() (lines 218-241) validates that vault.asset() matches the provided asset parameter and vault.share() matches this ShareToken. If a malicious vault contract implements these view functions correctly during registration but changes their return values afterward, can the registered vault bypass these invariants and mint shares for the wrong asset?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_8e9f26ed-a3ea-4f93-acad-2d1228a29003",
+    "timestamp": "2025-12-02 18:35:48.700584",
+    "report_generated": false
+  },
+  {
+    "question": "In WERC7575ShareToken.registerVault(), the function enforces MAX_VAULTS_PER_SHARE_TOKEN = 10 to prevent unbounded loops in aggregation (lines 232-234). If all 10 vault slots are filled and the owner needs to register a new vault for a critical asset, can they only do so by first unregistering an existing vault, potentially disrupting ongoing operations for users of the removed vault?",
+    "url": "https://deepwiki.com/search/-you-are-an-elite-web3-securit_86da18ed-637f-4aaf-9b20-52861e3e2138",
+    "timestamp": "2025-12-02 18:36:19.049410",
+    "report_generated": false
   }
 ]
